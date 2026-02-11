@@ -213,18 +213,11 @@ const AdminEmployees: React.FC = () => {
                                         {allPermissions.map((perm: Permission) => {
                                             const isSelected = editingRole.permissions.includes(perm.name);
                                             return (
-                                                <div
-                                                    key={perm.id}
+                                                <div key={perm.id}
                                                     onClick={() => togglePermission(perm.name)}
-                                                    className={`
-p - 3 rounded - xl border flex items - center gap - 3 cursor - pointer transition - all
-                            ${isSelected ? 'bg-app-gold/10 border-app-gold' : 'border-app-card hover:bg-gray-50'}
-`}
+                                                    className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${isSelected ? 'bg-app-gold/10 border-app-gold' : 'border-app-card hover:bg-gray-50'}`}
                                                 >
-                                                    <div className={`
-w - 5 h - 5 rounded flex items - center justify - center transition - colors
-                            ${isSelected ? 'bg-app-gold text-white' : 'bg-gray-200'}
-`}>
+                                                    <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isSelected ? 'bg-app-gold text-white' : 'bg-gray-200'}`}>
                                                         {isSelected && <ShieldCheck size={14} />}
                                                     </div>
                                                     <span className={`${isSelected ? 'text-app-goldDark font-bold' : 'text-app-text'} `}>
