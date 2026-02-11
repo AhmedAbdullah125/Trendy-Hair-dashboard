@@ -18,6 +18,7 @@ interface UpdateProductData {
     brand_id?: number;
     category_id?: number;
     is_recently?: number;
+    images?: File[];
 }
 
 /**
@@ -43,6 +44,12 @@ export const useUpdateAdminProduct = () => {
             formData.append('quantity', data.quantity?.toString() || '0');
             formData.append('brand_id', data.brand_id?.toString() || '0');
             formData.append('category_id', data.category_id?.toString() || '0');
+            if (data.images && data.images.length > 0) {
+                for (let index = 0; index < data.images.length; index++) {
+                    const element = data.images[index];
+                    formData.append('images[]', element); //file 
+                }
+            }
             if (data.position !== undefined) formData.append('position', data.position.toString());
 
             formData.append('is_active', (data.is_active ?? 1).toString());

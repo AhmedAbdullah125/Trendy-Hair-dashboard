@@ -18,10 +18,12 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'لوحة التحكم', path: '/admin/dashboard' },
-    { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
-    { icon: <Grid size={20} />, label: 'الأقسام', path: '/admin/categories' },
     { icon: <Package size={20} />, label: 'المنتجات', path: '/admin/products' },
+    { icon: <Grid size={20} />, label: 'الأقسام', path: '/admin/categories' },
     { icon: <Tag size={20} />, label: 'العلامات التجارية', path: '/admin/brands' },
+    { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
+    { icon: <Users size={20} />, label: 'المدراء', path: '/admin/admins' },
+    { icon: <Users size={20} />, label: 'الموظفين', path: '/admin/employees' },
     { icon: <ShoppingBag size={20} />, label: 'الطلبات', path: '/admin/orders' },
     { icon: <Users size={20} />, label: 'العملاء', path: '/admin/customers' },
     { icon: <Wallet size={20} />, label: 'المحافظ والنقاط', path: '/admin/wallets' },

@@ -9,6 +9,8 @@ import { useUpdateAdminProduct } from '../requests/useUpdateAdminProduct';
 import { useGetAdminCategories } from '../requests/useGetAdminCategories';
 import { useGetAdminBrands } from '../requests/useGetAdminBrands';
 
+import { useDeleteAdminProductImage } from '../requests/useDeleteAdminProductImage';
+
 interface ProductFormData {
   id?: number;
   name_ar: string;
@@ -25,6 +27,8 @@ interface ProductFormData {
   is_recently: boolean;
   image?: File;
   imageUrl?: string;
+  images?: File[];
+  existingImages?: { id: number; url: string }[];
 }
 
 const AdminProducts: React.FC = () => {
@@ -52,6 +56,7 @@ const AdminProducts: React.FC = () => {
   const deleteMutation = useDeleteAdminProduct();
   const addMutation = useAddAdminProduct();
   const updateMutation = useUpdateAdminProduct();
+  const deleteImageMutation = useDeleteAdminProductImage();
 
   const products = data?.items?.data || [];
   const pagination = data?.items?.pagination || {
@@ -134,7 +139,9 @@ const AdminProducts: React.FC = () => {
       category_id: undefined,
       position: 0,
       is_active: true,
-      is_recently: true
+      is_recently: true,
+      images: [],
+      existingImages: []
     });
     setIsModalOpen(true);
   };
@@ -154,7 +161,12 @@ const AdminProducts: React.FC = () => {
       position: product.position || 0,
       is_active: product.is_active,
       is_recently: product.is_recently,
-      imageUrl: product.main_image
+      imageUrl: product.main_image,
+      images: [],
+      existingImages: product.images?.map((img: any) => ({
+        id: img.id,
+        url: img.image || img.url || img.path || img.image_url
+      })) || []
     });
     setIsModalOpen(true);
   };
@@ -182,11 +194,15 @@ const AdminProducts: React.FC = () => {
       // Update existing product
       await updateMutation.mutateAsync({
         id: editingProduct.id,
-        ...productData
+        ...productData,
+        images: editingProduct.images
       });
     } else {
       // Add new product
-      await addMutation.mutateAsync(productData);
+      await addMutation.mutateAsync({
+        ...productData,
+        images: editingProduct.images
+      });
     }
 
     setIsModalOpen(false);
@@ -518,7 +534,7 @@ const AdminProducts: React.FC = () => {
 
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-bold text-app-text mb-2">صورة المنتج</label>
+                <label className="block text-sm font-bold text-app-text mb-2">صورة المنتج الرئيسية</label>
                 <div className="space-y-3">
                   <input
                     type="file"
@@ -544,6 +560,85 @@ const AdminProducts: React.FC = () => {
                           جديد
                         </div>
                       )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Images (Max 5) */}
+              <div>
+                <label className="block text-sm font-bold text-app-text mb-2">صور إضافية (أقصى حد 5)</label>
+                <div className="space-y-3">
+                  {/* Existing Images */}
+                  {editingProduct.existingImages && editingProduct.existingImages.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-bold text-app-textSec mb-2">الصور الحالية ({editingProduct.existingImages.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {editingProduct.existingImages.map((img) => (
+                          <div key={img.id} className="relative w-24 h-24 border border-app-card rounded-lg overflow-hidden group">
+                            <img
+                              src={img.url}
+                              alt="Product"
+                              className="w-full h-full object-cover"
+                            />
+
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={(editingProduct.existingImages?.length || 0) + (editingProduct.images?.length || 0) >= 5}
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        const newFiles = Array.from(e.target.files);
+                        const currentFiles = editingProduct.images || [];
+                        const existingCount = editingProduct.existingImages?.length || 0;
+                        const totalFiles = existingCount + currentFiles.length + newFiles.length;
+
+                        if (totalFiles > 5) {
+                          alert('يمكنك تحميل 5 صور فقط كحد أقصى (شامل الصور الحالية)');
+                          // Take only enough to reach 5
+                          const remainingSlots = 5 - (existingCount + currentFiles.length);
+                          if (remainingSlots > 0) {
+                            const allowedFiles = newFiles.slice(0, remainingSlots);
+                            setEditingProduct({ ...editingProduct, images: [...currentFiles, ...allowedFiles] });
+                          }
+                        } else {
+                          setEditingProduct({ ...editingProduct, images: [...currentFiles, ...newFiles] });
+                        }
+                      }
+                    }}
+                    className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-app-gold file:text-white hover:file:bg-app-goldDark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+
+                  {editingProduct.images && editingProduct.images.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {editingProduct.images.map((file, index) => (
+                        <div key={index} className="relative w-24 h-24 border border-app-card rounded-lg overflow-hidden group">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${index}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            onClick={() => {
+                              const newImages = editingProduct.images?.filter((_, i) => i !== index);
+                              setEditingProduct({ ...editingProduct, images: newImages });
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12} />
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-green-500/80 text-white text-[10px] text-center py-1">
+                            جديد
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

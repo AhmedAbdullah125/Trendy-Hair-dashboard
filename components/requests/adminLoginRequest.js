@@ -39,6 +39,7 @@ export async function adminLoginRequest(data, setLoading, lang) {
                 localStorage.setItem("admin_refresh_token", tokenData.refresh_token);
                 localStorage.setItem("admin_user", JSON.stringify(adminData));
                 localStorage.setItem("admin_permissions", JSON.stringify(response?.data?.items?.permissions || []));
+                localStorage.setItem("admin_last_refresh_time", Date.now().toString());
 
                 return { success: true, admin: adminData };
             } else {
