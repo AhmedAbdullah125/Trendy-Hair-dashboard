@@ -14,7 +14,7 @@ export const useDeleteAdminProduct = () => {
             const adminToken = localStorage.getItem('admin_token');
 
             const response = await axios.delete(
-                `${API_BASE_URL}/v1/admin/product/${productId}`,
+                `${API_BASE_URL}/v1/admin/products/${productId}`,
                 {
                     headers: {
                         'lang': 'ar',
