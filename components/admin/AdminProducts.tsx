@@ -1,8 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Edit3, Trash2, ChevronLeft, ChevronRight, CheckCircle2, X } from 'lucide-react';
-import { useData } from '../../context/DataContext';
-import { Package as PkgType } from '../../types';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGetAdminProducts } from '../requests/useGetAdminProducts';
 import { useDeleteAdminProduct } from '../requests/useDeleteAdminProduct';
@@ -30,11 +28,9 @@ interface ProductFormData {
 }
 
 const AdminProducts: React.FC = () => {
-  const { packages, deletePackage } = useData();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'products' | 'packages'>('products');
   const [brandFilter, setBrandFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showToast, setShowToast] = useState<string | null>(null);
@@ -218,45 +214,19 @@ const AdminProducts: React.FC = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-app-text">المنتجات</h2>
 
-        {activeTab === 'products' && (
-          <button
-            onClick={openAddModal}
-            className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2"
-          >
-            <Plus size={20} />
-            <span>إضافة منتج جديد</span>
-          </button>
-        )}
+        <button
+          onClick={openAddModal}
+          className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2"
+        >
+          <Plus size={20} />
+          <span>إضافة منتج جديد</span>
+        </button>
 
-        {activeTab === 'packages' && (
-          <button
-            onClick={() => alert("إدارة البكجات قيد التطوير")}
-            className="bg-gray-200 text-gray-500 px-6 py-3 rounded-xl font-bold flex items-center gap-2 cursor-not-allowed"
-          >
-            <Plus size={20} />
-            <span>إضافة بكج جديد</span>
-          </button>
-        )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-app-card/30">
-        <button
-          onClick={() => setActiveTab('products')}
-          className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'products' ? 'border-app-gold text-app-gold' : 'border-transparent text-app-textSec'}`}
-        >
-          المنتجات
-        </button>
-        <button
-          onClick={() => setActiveTab('packages')}
-          className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'packages' ? 'border-app-gold text-app-gold' : 'border-transparent text-app-textSec'}`}
-        >
-          البكجات والعروض
-        </button>
-      </div>
 
       {/* Filters (Products only) */}
-      {activeTab === 'products' && !isLoading && (
+      {!isLoading && (
         <div className="flex gap-4 items-center flex-wrap">
           <span className="text-sm font-bold text-app-textSec">تصفية:</span>
           <select
@@ -283,180 +253,141 @@ const AdminProducts: React.FC = () => {
       )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-app-card/30 overflow-hidden">
-        {activeTab === 'products' ? (
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="py-20 text-center">
-                <div className="w-8 h-8 border-2 border-app-gold/30 border-t-app-gold rounded-full animate-spin mx-auto" />
-                <p className="mt-4 text-app-textSec">جاري تحميل المنتجات...</p>
-              </div>
-            ) : error ? (
-              <div className="py-20 text-center">
-                <p className="text-red-500 font-bold">حدث خطأ في تحميل المنتجات</p>
-                <button
-                  onClick={() => refetch()}
-                  className="mt-4 px-6 py-2 bg-app-gold text-white rounded-xl hover:bg-app-goldDark"
-                >
-                  إعادة المحاولة
-                </button>
-              </div>
-            ) : (
-              <table className="w-full text-right">
-                <thead className="bg-app-bg text-app-textSec text-xs font-bold uppercase">
-                  <tr>
-                    <th className="px-6 py-4">المنتج</th>
-                    <th className="px-6 py-4">العلامة التجارية</th>
-                    <th className="px-6 py-4">القسم</th>
-                    <th className="px-6 py-4">السعر</th>
-                    <th className="px-6 py-4">المخزون</th>
-                    <th className="px-6 py-4">الحالة</th>
-                    <th className="px-6 py-4">إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-app-card/30 text-sm">
-                  {filteredProducts.map(p => (
-                    <tr key={p.id} className="hover:bg-app-bg/50 transition-colors">
-                      <td className="px-6 py-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-app-card">
-                          <img src={p.main_image} className="w-full h-full object-cover" alt="" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-app-text">{p.name_ar}</div>
-                          <div className="text-xs text-app-textSec">{p.sku}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-app-textSec">{p.brand.name_ar}</td>
-                      <td className="px-6 py-4 text-app-textSec">{p.category.name_ar}</td>
-                      <td className="px-6 py-4">
-                        {p.has_discount ? (
-                          <div>
-                            <div className="font-bold text-app-gold">{p.discounted_price} ر.س</div>
-                            <div className="text-xs text-app-textSec line-through">{p.price} ر.س</div>
-                          </div>
-                        ) : (
-                          <div className="font-bold text-app-gold">{p.price} ر.س</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-xs font-bold ${p.in_stock ? 'text-green-600' : 'text-red-600'}`}>
-                          {p.quantity} متوفر
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${p.is_active ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                          {p.is_active ? 'نشط' : 'غير نشط'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 flex gap-2">
-                        <button
-                          onClick={() => openEditModal(p)}
-                          className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
-                        >
-                          <Edit3 size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredProducts.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-app-textSec">لا توجد منتجات مطابقة</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
 
-            {/* Pagination */}
-            {!isLoading && !error && pagination.total_pages > 1 && (
-              <div className="p-4 border-t border-app-card/30 flex items-center justify-between bg-app-bg/30">
-                <div className="text-sm text-app-textSec">
-                  صفحة {pagination.current_page} من {pagination.total_pages} • إجمالي المنتجات: {pagination.total_items}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-app-card hover:bg-app-gold hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                  {Array.from({ length: Math.min(pagination.total_pages, 5) }, (_, i) => {
-                    let page;
-                    if (pagination.total_pages <= 5) {
-                      page = i + 1;
-                    } else if (currentPage <= 3) {
-                      page = i + 1;
-                    } else if (currentPage >= pagination.total_pages - 2) {
-                      page = pagination.total_pages - 4 + i;
-                    } else {
-                      page = currentPage - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-lg font-bold transition-colors ${currentPage === page
-                          ? 'bg-app-gold text-white'
-                          : 'border border-app-card hover:bg-app-bg'
-                          }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === pagination.total_pages}
-                    className="p-2 rounded-lg border border-app-card hover:bg-app-gold hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            {/* Packages List */}
+        <div className="overflow-x-auto">
+          {isLoading ? (
+            <div className="py-20 text-center">
+              <div className="w-8 h-8 border-2 border-app-gold/30 border-t-app-gold rounded-full animate-spin mx-auto" />
+              <p className="mt-4 text-app-textSec">جاري تحميل المنتجات...</p>
+            </div>
+          ) : error ? (
+            <div className="py-20 text-center">
+              <p className="text-red-500 font-bold">حدث خطأ في تحميل المنتجات</p>
+              <button
+                onClick={() => refetch()}
+                className="mt-4 px-6 py-2 bg-app-gold text-white rounded-xl hover:bg-app-goldDark"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
+          ) : (
             <table className="w-full text-right">
               <thead className="bg-app-bg text-app-textSec text-xs font-bold uppercase">
                 <tr>
-                  <th className="px-6 py-4">البكج</th>
-                  <th className="px-6 py-4">عدد المنتجات</th>
+                  <th className="px-6 py-4">المنتج</th>
+                  <th className="px-6 py-4">العلامة التجارية</th>
+                  <th className="px-6 py-4">القسم</th>
                   <th className="px-6 py-4">السعر</th>
+                  <th className="px-6 py-4">المخزون</th>
                   <th className="px-6 py-4">الحالة</th>
                   <th className="px-6 py-4">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-app-card/30 text-sm">
-                {packages.map(pkg => (
-                  <tr key={pkg.id}>
-                    <td className="px-6 py-4 font-bold text-app-text">{pkg.name}</td>
-                    <td className="px-6 py-4">{pkg.productIds.length}</td>
-                    <td className="px-6 py-4 font-bold text-app-gold">{pkg.price}</td>
+                {filteredProducts.map(p => (
+                  <tr key={p.id} className="hover:bg-app-bg/50 transition-colors">
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-app-card">
+                        <img src={p.main_image} className="w-full h-full object-cover" alt="" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-app-text">{p.name_ar}</div>
+                        <div className="text-xs text-app-textSec">{p.sku}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-app-textSec">{p.brand.name_ar}</td>
+                    <td className="px-6 py-4 text-app-textSec">{p.category.name_ar}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${pkg.isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                        {pkg.isActive ? 'نشط' : 'غير نشط'}
+                      {p.has_discount ? (
+                        <div>
+                          <div className="font-bold text-app-gold">{p.discounted_price} ر.س</div>
+                          <div className="text-xs text-app-textSec line-through">{p.price} ر.س</div>
+                        </div>
+                      ) : (
+                        <div className="font-bold text-app-gold">{p.price} ر.س</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs font-bold ${p.in_stock ? 'text-green-600' : 'text-red-600'}`}>
+                        {p.quantity} متوفر
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${p.is_active ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                        {p.is_active ? 'نشط' : 'غير نشط'}
                       </span>
                     </td>
                     <td className="px-6 py-4 flex gap-2">
-                      <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit3 size={18} /></button>
-                      <button onClick={() => { if (confirm('حذف؟')) deletePackage(pkg.id); }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                      <button
+                        onClick={() => openEditModal(p)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
+                      >
+                        <Edit3 size={18} />
+                      </button>
+                      <button onClick={() => handleDelete(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                        <Trash2 size={18} />
+                      </button>
                     </td>
                   </tr>
                 ))}
-                {packages.length === 0 && (
+                {filteredProducts.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-app-textSec">لا توجد بكجات</td>
+                    <td colSpan={7} className="py-8 text-center text-app-textSec">لا توجد منتجات مطابقة</td>
                   </tr>
                 )}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+
+          {/* Pagination */}
+          {!isLoading && !error && pagination.total_pages > 1 && (
+            <div className="p-4 border-t border-app-card/30 flex items-center justify-between bg-app-bg/30">
+              <div className="text-sm text-app-textSec">
+                صفحة {pagination.current_page} من {pagination.total_pages} • إجمالي المنتجات: {pagination.total_items}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-app-card hover:bg-app-gold hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight size={20} />
+                </button>
+                {Array.from({ length: Math.min(pagination.total_pages, 5) }, (_, i) => {
+                  let page;
+                  if (pagination.total_pages <= 5) {
+                    page = i + 1;
+                  } else if (currentPage <= 3) {
+                    page = i + 1;
+                  } else if (currentPage >= pagination.total_pages - 2) {
+                    page = pagination.total_pages - 4 + i;
+                  } else {
+                    page = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-4 py-2 rounded-lg font-bold transition-colors ${currentPage === page
+                        ? 'bg-app-gold text-white'
+                        : 'border border-app-card hover:bg-app-bg'
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === pagination.total_pages}
+                  className="p-2 rounded-lg border border-app-card hover:bg-app-gold hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add/Edit Product Modal */}
