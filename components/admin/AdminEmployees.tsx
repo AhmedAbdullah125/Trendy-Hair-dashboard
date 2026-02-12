@@ -51,29 +51,10 @@ const AdminEmployees: React.FC = () => {
 
     const handleOpenModal = (role?: Role) => {
         if (role) {
-            // For editing, we ideally need the role's current permissions.
-            // If the list endpoint doesn't return them, we might need a separate fetch.
-            // Assuming for now we start blank or from what's available.
-            // The user request didn't specify a "get role details" endpoint, just list and update.
-            // Update endpoint usually implies we know what to update.
-            // If the list doesn't have permissions, we can't pre-fill them easily without another call.
-            // Let's check the list response in the prompt: it DOES NOT show permissions in the item list.
-            // This is a common pattern. Usually there is a show endpoint or we have to guess.
-            // Wait, the update endpoint takes permissions.
-            // I will implement it such that when editing, if permissions are missing, we start empty or fetch properly if an ID endpoint existed.
-            // Given constraints, I will assume for now we might not be able to see current permissions of a role from the list.
-            // I'll add a TODO or try to find if there's a show endpoint.
-            // Actually, standard REST `GET / admin / roles / { id }` usually exists.
-            // But based on provided info, I only have list.
-            // I will assume for now that I can't pre-fill permissions unless I fetch them.
-            // I'll leave them empty for edit, which acts like "reset permissions" or "add new ones".
-            // OR, maybe the update expectation is just sending the ones to be *active*.
-            // Let's implement basic structure first.
-
             setEditingRole({
                 id: role.id,
                 name: role.name,
-                permissions: [] // Cannot populate without extra data
+                permissions: []
             });
         } else {
             setEditingRole({ name: '', permissions: [] });

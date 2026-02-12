@@ -316,11 +316,11 @@ const AdminProducts: React.FC = () => {
                     <td className="px-6 py-4">
                       {p.has_discount ? (
                         <div>
-                          <div className="font-bold text-app-gold">{p.discounted_price} ر.س</div>
-                          <div className="text-xs text-app-textSec line-through">{p.price} ر.س</div>
+                          <div className="font-bold text-app-gold">{p.discounted_price} د.ك</div>
+                          <div className="text-xs text-app-textSec line-through">{p.price} د.ك</div>
                         </div>
                       ) : (
-                        <div className="font-bold text-app-gold">{p.price} ر.س</div>
+                        <div className="font-bold text-app-gold">{p.price} د.ك</div>
                       )}
                     </td>
                     <td className="px-6 py-4">
