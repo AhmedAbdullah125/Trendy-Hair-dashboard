@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
 import { useGetAdminOrders, Order, OrderStatus } from '../requests/useGetAdminOrders';
+import { useChangeOrderStatus, OrderStatusType } from '../requests/useChangeOrderStatus';
 import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
 
 const AdminOrders: React.FC = () => {
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatusType>('pending');
 
   // Filter and pagination state
   const [pageNumber, setPageNumber] = useState(1);
@@ -36,12 +39,38 @@ const AdminOrders: React.FC = () => {
     search: debouncedSearch,
   });
 
+  // Change order status mutation
+  const changeOrderStatusMutation = useChangeOrderStatus();
+
   const orders = data?.items?.data || [];
   const pagination = data?.items?.pagination;
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
+    setSelectedStatus(order.status as OrderStatusType);
     setView('detail');
+  };
+
+  const handleStatusChangeSubmit = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      await changeOrderStatusMutation.mutateAsync({
+        orderId: selectedOrder.id,
+        status: selectedStatus,
+      });
+
+      // Update the local order object
+      setSelectedOrder({
+        ...selectedOrder,
+        status: selectedStatus,
+      });
+
+      toast.success('تم تحديث حالة الطلب بنجاح');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast.error('حدث خطأ أثناء تحديث حالة الطلب');
+    }
   };
 
   const handleExportToExcel = () => {
@@ -125,10 +154,12 @@ const AdminOrders: React.FC = () => {
   const getStatusInfo = (status: string) => {
     const statusMap: Record<string, { label: string; colors: string }> = {
       'pending': { label: 'قيد الانتظار', colors: 'bg-yellow-100 text-yellow-700' },
+      'confirmed': { label: 'مؤكد', colors: 'bg-cyan-100 text-cyan-600' },
       'processing': { label: 'قيد التجهيز', colors: 'bg-blue-100 text-blue-600' },
+      'shipped': { label: 'تم الشحن', colors: 'bg-purple-100 text-purple-600' },
+      'delivered': { label: 'تم التوصيل', colors: 'bg-emerald-100 text-emerald-600' },
       'completed': { label: 'مكتمل', colors: 'bg-green-100 text-green-600' },
       'cancelled': { label: 'ملغي', colors: 'bg-red-100 text-red-600' },
-      'shipped': { label: 'تم الشحن', colors: 'bg-purple-100 text-purple-600' },
     };
     return statusMap[status] || { label: status, colors: 'bg-gray-100 text-gray-600' };
   };
@@ -157,8 +188,19 @@ const AdminOrders: React.FC = () => {
               <Printer size={18} />
               طباعة الفاتورة
             </button>
-            <button className="bg-app-gold text-white px-4 py-2 rounded-xl font-bold hover:bg-app-goldDark">
-              حفظ التغييرات
+            <button
+              onClick={handleStatusChangeSubmit}
+              disabled={changeOrderStatusMutation.isPending}
+              className="bg-app-gold text-white px-4 py-2 rounded-xl font-bold hover:bg-app-goldDark disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {changeOrderStatusMutation.isPending ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  جاري الحفظ...
+                </>
+              ) : (
+                'حفظ التغييرات'
+              )}
             </button>
           </div>
         </div>
@@ -259,11 +301,14 @@ const AdminOrders: React.FC = () => {
               <h3 className="text-lg font-bold text-app-text mb-4">حالة الطلب</h3>
               <select
                 className="w-full p-3 bg-app-bg border border-app-card rounded-xl font-bold text-app-text outline-none focus:border-app-gold"
-                defaultValue={selectedOrder.status}
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value as OrderStatusType)}
               >
                 <option value="pending">قيد الانتظار</option>
+                <option value="confirmed">مؤكد</option>
                 <option value="processing">قيد التجهيز</option>
                 <option value="shipped">تم الشحن</option>
+                <option value="delivered">تم التوصيل</option>
                 <option value="completed">مكتمل</option>
                 <option value="cancelled">ملغي</option>
               </select>
@@ -328,8 +373,10 @@ const AdminOrders: React.FC = () => {
           >
             <option value="">كل الحالات</option>
             <option value="pending">قيد الانتظار</option>
+            <option value="confirmed">مؤكد</option>
             <option value="processing">قيد التجهيز</option>
             <option value="shipped">تم الشحن</option>
+            <option value="delivered">تم التوصيل</option>
             <option value="completed">مكتمل</option>
             <option value="cancelled">ملغي</option>
           </select>
