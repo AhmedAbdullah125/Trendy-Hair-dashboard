@@ -56,7 +56,6 @@ const AppContent: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout }) 
           <Route path="content" element={<AdminContent />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="reports" element={<AdminPlaceholder title="التقارير" />} />
-          <Route path="users" element={<AdminPlaceholder title="الصلاحيات" />} />
           <Route path="settings" element={<AdminPlaceholder title="الإعدادات" />} />
         </Route>
 

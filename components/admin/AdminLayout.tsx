@@ -33,7 +33,6 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <Star size={20} />, label: 'المراجعات', path: '/admin/reviews' },
     { icon: <Home size={20} />, label: 'إدارة المحتوى', path: '/admin/content' },
     { icon: <FileBarChart size={20} />, label: 'التقارير', path: '/admin/reports' },
-    { icon: <ShieldCheck size={20} />, label: 'الصلاحيات', path: '/admin/users' },
     { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings' },
   ];
 
