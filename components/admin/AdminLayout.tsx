@@ -21,6 +21,8 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <Package size={20} />, label: 'المنتجات', path: '/admin/products' },
     { icon: <Grid size={20} />, label: 'الأقسام', path: '/admin/categories' },
     { icon: <Tag size={20} />, label: 'العلامات التجارية', path: '/admin/brands' },
+    //banners
+    { icon: <Tag size={20} />, label: 'البنرات', path: '/admin/banners' },
     { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
     { icon: <Users size={20} />, label: 'المدراء', path: '/admin/admins' },
     { icon: <Users size={20} />, label: 'الموظفين', path: '/admin/employees' },
