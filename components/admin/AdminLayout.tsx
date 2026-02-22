@@ -23,16 +23,16 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <Tag size={20} />, label: 'العلامات التجارية', path: '/admin/brands' },
     //banners
     { icon: <Tag size={20} />, label: 'البنرات', path: '/admin/banners' },
-    { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
     { icon: <Users size={20} />, label: 'المدراء', path: '/admin/admins' },
     { icon: <Users size={20} />, label: 'الموظفين', path: '/admin/employees' },
     { icon: <ShoppingBag size={20} />, label: 'الطلبات', path: '/admin/orders' },
     { icon: <Users size={20} />, label: 'العملاء', path: '/admin/customers' },
-    { icon: <Wallet size={20} />, label: 'المحافظ والنقاط', path: '/admin/wallets' },
-    { icon: <Gamepad2 size={20} />, label: 'مسابقة تريندي', path: '/admin/game' },
     { icon: <Star size={20} />, label: 'المراجعات', path: '/admin/reviews' },
-    { icon: <Home size={20} />, label: 'إدارة المحتوى', path: '/admin/content' },
+    { icon: <Gamepad2 size={20} />, label: 'مسابقة تريندي', path: '/admin/game' },
+    // { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
+    { icon: <Layers size={20} />, label: 'المحافظات والمدن', path: '/admin/locations' },
     { icon: <FileBarChart size={20} />, label: 'التقارير', path: '/admin/reports' },
+    { icon: <Wallet size={20} />, label: 'المحافظ والنقاط', path: '/admin/wallets' },
     { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings' },
   ];
 

@@ -19,6 +19,7 @@ import AdminEmployees from './components/admin/AdminEmployees';
 import Admins from './components/admin/Admins';
 import AdminCustomers from './components/admin/AdminCustomers';
 import AdminBanners from './components/admin/AdminBanners';
+import AdminLocations from './components/admin/AdminLocations';
 
 const AdminPlaceholder = ({ title }: { title: string }) => (
   <div className="p-10 text-center text-app-textSec font-bold text-xl">صفحة {title} قيد التطوير</div>
@@ -55,6 +56,7 @@ const AppContent: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout }) 
           <Route path="game" element={<AdminGame />} />
           <Route path="content" element={<AdminContent />} />
           <Route path="customers" element={<AdminCustomers />} />
+          <Route path="locations" element={<AdminLocations />} />
           <Route path="reports" element={<AdminPlaceholder title="التقارير" />} />
           <Route path="settings" element={<AdminPlaceholder title="الإعدادات" />} />
         </Route>
