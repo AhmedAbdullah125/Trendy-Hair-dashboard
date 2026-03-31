@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingBag, Users, Wallet,
   Gamepad2, Home, FileBarChart, Settings,
@@ -66,9 +66,9 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
         `}
       >
         <div className="p-6 flex items-center justify-between border-b border-app-card/30 h-20">
-          <h1 className={`text-xl font-bold text-app-goldDark truncate transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>
+          <Link to="/admin/dashboard" className={`text-xl font-bold text-app-goldDark truncate transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>
             لوحة الإدارة
-          </h1>
+          </Link>
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-app-textSec hover:text-app-gold hidden md:block">
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -152,15 +152,7 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
               <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
 
-            <div className="flex items-center gap-3 mr-2">
-              <div className="text-left hidden md:block">
-                <p className="text-sm font-bold text-app-text">مدير النظام</p>
-                <p className="text-[10px] text-app-textSec">Super Admin</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-app-gold text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                A
-              </div>
-            </div>
+
           </div>
         </header>
 
