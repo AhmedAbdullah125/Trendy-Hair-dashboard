@@ -7,6 +7,7 @@ import {
   LogOut, Menu, X, Bell, Search, ShieldCheck, Layers, Tag, Grid, Star, Trash2
 } from 'lucide-react';
 import { useAdminTokenRefresh } from '../../hooks/useAdminTokenRefresh';
+import { toast } from 'sonner';
 
 const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -28,12 +29,12 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <ShoppingBag size={20} />, label: 'الطلبات', path: '/admin/orders' },
     { icon: <Users size={20} />, label: 'العملاء', path: '/admin/customers' },
     { icon: <Star size={20} />, label: 'المراجعات', path: '/admin/reviews' },
-    { icon: <Gamepad2 size={20} />, label: 'مسابقة تريندي', path: '/admin/game' },
-    // { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
     { icon: <Layers size={20} />, label: 'المحافظات والمدن', path: '/admin/locations' },
-    { icon: <FileBarChart size={20} />, label: 'التقارير', path: '/admin/reports' },
-    { icon: <Wallet size={20} />, label: 'المحافظ والنقاط', path: '/admin/wallets' },
-    { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings' },
+    // { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
+    { icon: <Gamepad2 size={20} />, label: 'مسابقة تريندي', path: '/admin/game', disabled: true },
+    { icon: <FileBarChart size={20} />, label: 'التقارير', path: '/admin/reports', disabled: true },
+    { icon: <Wallet size={20} />, label: 'المحافظ والنقاط', path: '/admin/wallets', disabled: true },
+    { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings', disabled: true },
   ];
 
   const handleClearCache = async () => {
@@ -82,11 +83,18 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={(e) => {
+                if (item.disabled) {
+                  e.preventDefault();
+                  toast('feature under developing');
+                }
+              }}
               className={({ isActive }) => `
                 flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200
-                ${isActive
+                ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                ${isActive && !item.disabled
                   ? 'bg-app-gold text-white shadow-md shadow-app-gold/20'
-                  : 'text-app-textSec hover:bg-app-bg hover:text-app-goldDark'
+                  : 'text-app-textSec' + (item.disabled ? '' : ' hover:bg-app-bg hover:text-app-goldDark')
                 }
               `}
             >
