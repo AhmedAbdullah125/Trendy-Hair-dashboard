@@ -47,7 +47,20 @@ const AdminOrders: React.FC = () => {
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
-    setSelectedStatus(order.status as OrderStatusType);
+
+    // Convert Arabic status back to English key for state management (select input)
+    const arToEnMap: Record<string, OrderStatusType> = {
+      'قيد الانتظار': 'pending',
+      'مؤكد': 'confirmed',
+      'قيد التجهيز': 'processing',
+      'تم الشحن': 'shipped',
+      'تم التوصيل': 'delivered',
+      'مكتمل': 'completed',
+      'ملغي': 'cancelled',
+    };
+
+    const mappedStatus = arToEnMap[order.status] || (order.status as OrderStatusType);
+    setSelectedStatus(mappedStatus);
     setView('detail');
   };
 
@@ -150,9 +163,10 @@ const AdminOrders: React.FC = () => {
     setPageNumber(1);
   };
 
-  // Status mapping from English to Arabic with colors
+  // Status mapping from English and Arabic to localized labels and colors
   const getStatusInfo = (status: string) => {
     const statusMap: Record<string, { label: string; colors: string }> = {
+      // Order Statuses (English keys)
       'pending': { label: 'قيد الانتظار', colors: 'bg-yellow-100 text-yellow-700' },
       'confirmed': { label: 'مؤكد', colors: 'bg-cyan-100 text-cyan-600' },
       'processing': { label: 'قيد التجهيز', colors: 'bg-blue-100 text-blue-600' },
@@ -160,6 +174,21 @@ const AdminOrders: React.FC = () => {
       'delivered': { label: 'تم التوصيل', colors: 'bg-emerald-100 text-emerald-600' },
       'completed': { label: 'مكتمل', colors: 'bg-green-100 text-green-600' },
       'cancelled': { label: 'ملغي', colors: 'bg-red-100 text-red-600' },
+
+      // Order Statuses (Arabic response from API)
+      'قيد الانتظار': { label: 'قيد الانتظار', colors: 'bg-yellow-100 text-yellow-700' },
+      'مؤكد': { label: 'مؤكد', colors: 'bg-cyan-100 text-cyan-600' },
+      'قيد التجهيز': { label: 'قيد التجهيز', colors: 'bg-blue-100 text-blue-600' },
+      'تم الشحن': { label: 'تم الشحن', colors: 'bg-purple-100 text-purple-600' },
+      'تم التوصيل': { label: 'تم التوصيل', colors: 'bg-emerald-100 text-emerald-600' },
+      'مكتمل': { label: 'مكتمل', colors: 'bg-green-100 text-green-600' },
+      'ملغي': { label: 'ملغي', colors: 'bg-red-100 text-red-600' },
+
+      // Payment Statuses (Arabic response from API)
+      'مدفوع': { label: 'مدفوع', colors: 'bg-emerald-100 text-emerald-600' },
+      'فشل الدفع': { label: 'فشل الدفع', colors: 'bg-red-100 text-red-600' },
+      'فشل': { label: 'فشل', colors: 'bg-red-100 text-red-600' },
+      'قيد الدفع': { label: 'قيد الدفع', colors: 'bg-yellow-100 text-yellow-700' },
     };
     return statusMap[status] || { label: status, colors: 'bg-gray-100 text-gray-600' };
   };
