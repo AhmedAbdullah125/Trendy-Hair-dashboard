@@ -60,9 +60,15 @@ interface AdminProductsResponse {
  * Hook to fetch admin products with pagination
  * Returns detailed product information including brand, category, pricing, and stock details
  */
-export const useGetAdminProducts = (pageSize = 10, pageNumber = 1, lang = 'ar') => {
+export const useGetAdminProducts = (
+    pageSize = 10,
+    pageNumber = 1,
+    lang = 'ar',
+    categoryId?: number | null,
+    brandId?: number | null,
+) => {
     return useQuery<AdminProductsResponse>({
-        queryKey: ['admin-products', pageSize, pageNumber, lang],
+        queryKey: ['admin-products', pageSize, pageNumber, lang, categoryId, brandId],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
 
@@ -72,6 +78,8 @@ export const useGetAdminProducts = (pageSize = 10, pageNumber = 1, lang = 'ar') 
                     params: {
                         page_size: pageSize,
                         page_number: pageNumber,
+                        ...(categoryId ? { category_id: categoryId } : {}),
+                        ...(brandId ? { brand_id: brandId } : {}),
                     },
                     headers: {
                         'lang': lang,

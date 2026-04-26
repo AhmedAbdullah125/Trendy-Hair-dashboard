@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit3, Trash2, ChevronLeft, ChevronRight, CheckCircle2, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGetAdminProducts } from '../requests/useGetAdminProducts';
@@ -35,8 +35,8 @@ const AdminProducts: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [brandFilter, setBrandFilter] = useState<string>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [brandFilter, setBrandFilter] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -46,7 +46,7 @@ const AdminProducts: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
 
   // Fetch products from API
-  const { data, isLoading, error, refetch } = useGetAdminProducts(pageSize, currentPage, 'ar');
+  const { data, isLoading, error, refetch } = useGetAdminProducts(pageSize, currentPage, 'ar', categoryFilter, brandFilter);
 
   // Fetch categories and brands for form selects
   const { data: categoriesData } = useGetAdminCategories(1000, 1, 'ar');
@@ -77,41 +77,18 @@ const AdminProducts: React.FC = () => {
     }
   }, [location]);
 
-  // Client-side filtering based on brand and category
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
+  const allBrands = brandsData?.items?.data || [];
+  const allCategories = categoriesData?.items?.data || [];
 
-    if (brandFilter !== 'all') {
-      result = result.filter(p => p.brand.id.toString() === brandFilter);
-    }
+  const handleBrandFilter = (value: string) => {
+    setBrandFilter(value === 'all' ? null : parseInt(value));
+    setCurrentPage(1);
+  };
 
-    if (categoryFilter !== 'all') {
-      result = result.filter(p => p.category.id.toString() === categoryFilter);
-    }
-
-    return result;
-  }, [products, brandFilter, categoryFilter]);
-
-  // Get unique brands and categories from current products
-  const availableBrands = useMemo(() => {
-    const brandMap = new Map();
-    products.forEach(p => {
-      if (!brandMap.has(p.brand.id)) {
-        brandMap.set(p.brand.id, p.brand);
-      }
-    });
-    return Array.from(brandMap.values());
-  }, [products]);
-
-  const availableCategories = useMemo(() => {
-    const categoryMap = new Map();
-    products.forEach(p => {
-      if (!categoryMap.has(p.category.id)) {
-        categoryMap.set(p.category.id, p.category);
-      }
-    });
-    return Array.from(categoryMap.values());
-  }, [products]);
+  const handleCategoryFilter = (value: string) => {
+    setCategoryFilter(value === 'all' ? null : parseInt(value));
+    setCurrentPage(1);
+  };
 
   const handleDelete = (id: number) => {
     setProductToDelete(id);
@@ -211,9 +188,6 @@ const AdminProducts: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.total_pages) {
       setCurrentPage(newPage);
-      // Reset filters when changing page
-      setBrandFilter('all');
-      setCategoryFilter('all');
     }
   };
 
@@ -247,21 +221,21 @@ const AdminProducts: React.FC = () => {
           <span className="text-sm font-bold text-app-textSec">تصفية:</span>
           <select
             className="bg-white border border-app-card rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
-            value={brandFilter}
-            onChange={(e) => setBrandFilter(e.target.value)}
+            value={brandFilter ?? 'all'}
+            onChange={(e) => handleBrandFilter(e.target.value)}
           >
             <option value="all">كل العلامات التجارية</option>
-            {availableBrands.map(b => (
+            {allBrands.map((b: any) => (
               <option key={b.id} value={b.id}>{b.name_ar}</option>
             ))}
           </select>
           <select
             className="bg-white border border-app-card rounded-lg px-3 py-2 text-sm outline-none focus:border-app-gold"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            value={categoryFilter ?? 'all'}
+            onChange={(e) => handleCategoryFilter(e.target.value)}
           >
             <option value="all">كل الأقسام</option>
-            {availableCategories.map(c => (
+            {allCategories.map((c: any) => (
               <option key={c.id} value={c.id}>{c.name_ar}</option>
             ))}
           </select>
@@ -300,7 +274,7 @@ const AdminProducts: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-app-card/30 text-sm">
-                {filteredProducts.map(p => (
+                {products.map(p => (
                   <tr key={p.id} className="hover:bg-app-bg/50 transition-colors">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg overflow-hidden border border-app-card">
@@ -346,7 +320,7 @@ const AdminProducts: React.FC = () => {
                     </td>
                   </tr>
                 ))}
-                {filteredProducts.length === 0 && (
+                {products.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-app-textSec">لا توجد منتجات مطابقة</td>
                   </tr>
