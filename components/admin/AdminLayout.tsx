@@ -145,7 +145,7 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
               <input
                 type="text"
@@ -154,14 +154,14 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
               />
               <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-textSec" />
             </div>
-            {/* 
+            
             <button className="relative p-2 rounded-full hover:bg-app-bg text-app-textSec transition-colors">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-            </button> */}
+            </button>
 
 
-          </div>
+          </div> */}
         </header>
 
         {/* Page Content */}
