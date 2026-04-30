@@ -122,8 +122,9 @@ const AdminCategories: React.FC = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-app-text">الأقسام</h2>
         <button
+          disabled
           onClick={openAddModal}
-          className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2"
+          className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2 opacity-50 cursor-not-allowed"
         >
           <Plus size={20} />
           <span>إضافة قسم جديد</span>
@@ -193,8 +194,8 @@ const AdminCategories: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 font-bold">{cat.position}</td>
                     <td className="px-6 py-4 flex gap-2">
-                      <button onClick={() => openEditModal(cat)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit3 size={18} /></button>
-                      <button onClick={() => handleDelete(cat.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                      <button disabled onClick={() => openEditModal(cat)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"><Edit3 size={18} /></button>
+                      <button disabled onClick={() => handleDelete(cat.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"><Trash2 size={18} /></button>
                     </td>
                   </tr>
                 ))}

@@ -206,7 +206,8 @@ const AdminProducts: React.FC = () => {
 
         <button
           onClick={openAddModal}
-          className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2"
+          disabled
+          className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2 opacity-50 cursor-not-allowed"
         >
           <Plus size={20} />
           <span>إضافة منتج جديد</span>
@@ -309,12 +310,17 @@ const AdminProducts: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 flex gap-2">
                       <button
+                        disabled
                         onClick={() => openEditModal(p)}
-                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
+                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"
                       >
                         <Edit3 size={18} />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                      <button
+                        disabled
+                        onClick={() => handleDelete(p.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </td>
