@@ -37,25 +37,7 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings', disabled: true },
   ];
 
-  const handleClearCache = async () => {
-    if (window.confirm("هل أنت متأكد من مسح الكاش وإعادة ضبط البيانات التجريبية؟")) {
-      // Clear Local Storage
-      localStorage.clear();
 
-      // Clear Cache Storage
-      if ('caches' in window) {
-        try {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
-        } catch (e) {
-          console.error("Error clearing cache storage:", e);
-        }
-      }
-
-      // Reload the app
-      window.location.reload();
-    }
-  };
 
   return (
     <div className="flex h-screen bg-[#F7F4EE] font-alexandria overflow-hidden" dir="rtl">
@@ -107,15 +89,7 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
         </nav>
 
         <div className="p-4 border-t border-app-card/30 flex flex-col gap-2">
-          <button
-            onClick={handleClearCache}
-            className="flex items-center gap-3 px-3 py-3 w-full rounded-xl text-app-textSec hover:bg-red-50 hover:text-red-500 transition-colors"
-          >
-            <Trash2 size={20} />
-            <span className={`whitespace-nowrap transition-opacity font-medium ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>
-              مسح الكاش
-            </span>
-          </button>
+
 
           <button
             onClick={() => {

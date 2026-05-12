@@ -47,7 +47,7 @@ const AdminLogin: React.FC = () => {
         const result = await adminLoginRequest(formData, setLoading, 'ar');
 
         if (result.success) {
-            navigate('/admin/dashboard');
+            navigate('/admin/orders');
         }
     };
 
