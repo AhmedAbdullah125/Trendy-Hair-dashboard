@@ -522,6 +522,7 @@ const AdminOrders: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-app-card/30 overflow-hidden">
         {/* Filters Bar */}
         <div className="p-4 border-b border-app-card/30 flex flex-wrap gap-4 items-center bg-gray-50/50">
+          {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-app-textSec" size={18} />
             <input
@@ -532,54 +533,87 @@ const AdminOrders: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
           {/* Delivery Status Filter */}
-          <select
-            className="px-4 py-2 border border-app-card rounded-xl bg-white outline-none focus:border-app-gold text-sm"
-            value={status}
-            onChange={(e) => handleStatusChange(e.target.value)}
-          >
-            <option value="">كل حالات التوصيل</option>
-            <option value="pending">قيد الانتظار</option>
-            <option value="confirmed">مؤكد</option>
-            <option value="processing">قيد التجهيز</option>
-            <option value="shipped">تم الشحن</option>
-            <option value="delivered">تم التوصيل</option>
-            <option value="completed">مكتمل</option>
-            <option value="cancelled">ملغي</option>
-          </select>
+          <div className="relative flex items-center">
+            <select
+              className={`pl-7 pr-4 py-2 border rounded-xl bg-white outline-none focus:border-app-gold text-sm transition-colors ${status ? 'border-app-gold text-app-goldDark font-bold' : 'border-app-card'}`}
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            >
+              <option value="">كل حالات التوصيل</option>
+              <option value="pending">قيد الانتظار</option>
+              <option value="confirmed">مؤكد</option>
+              <option value="processing">قيد التجهيز</option>
+              <option value="shipped">تم الشحن</option>
+              <option value="delivered">تم التوصيل</option>
+              <option value="completed">مكتمل</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+            {status && (
+              <button
+                onClick={() => { setStatus(''); setPageNumber(1); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-app-gold text-white text-xs leading-none hover:bg-app-goldDark"
+                title="إزالة الفلتر"
+              >×</button>
+            )}
+          </div>
 
           {/* Payment Status Filter */}
-          <select
-            className="px-4 py-2 border border-app-card rounded-xl bg-white outline-none focus:border-app-gold text-sm"
-            value={paymentStatus}
-            onChange={(e) => handlePaymentStatusChange(e.target.value)}
-          >
-            <option value="">كل حالات الدفع</option>
-            <option value="pending">في انتظار الدفع</option>
-            <option value="paid">تم الدفع</option>
-            <option value="failed">فشل الدفع</option>
-            <option value="refunded">تم الإرجاع المالي</option>
-          </select>
-          <input
-            type="date"
-            className="px-4 py-2 border border-app-card rounded-xl bg-white outline-none focus:border-app-gold text-sm"
-            placeholder="من تاريخ"
-            value={fromDate}
-            onChange={(e) => {
-              setFromDate(e.target.value);
-              setPageNumber(1);
-            }}
-          />
-          <input
-            type="date"
-            className="px-4 py-2 border border-app-card rounded-xl bg-white outline-none focus:border-app-gold text-sm"
-            placeholder="إلى تاريخ"
-            value={toDate}
-            onChange={(e) => {
-              setToDate(e.target.value);
-              setPageNumber(1);
-            }}
-          />
+          <div className="relative flex items-center">
+            <select
+              className={`pl-7 pr-4 py-2 border rounded-xl bg-white outline-none focus:border-app-gold text-sm transition-colors ${paymentStatus ? 'border-app-gold text-app-goldDark font-bold' : 'border-app-card'}`}
+              value={paymentStatus}
+              onChange={(e) => handlePaymentStatusChange(e.target.value)}
+            >
+              <option value="">كل حالات الدفع</option>
+              <option value="pending">في انتظار الدفع</option>
+              <option value="paid">تم الدفع</option>
+              <option value="failed">فشل الدفع</option>
+              <option value="refunded">تم الإرجاع المالي</option>
+            </select>
+            {paymentStatus && (
+              <button
+                onClick={() => { setPaymentStatus(''); setPageNumber(1); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-app-gold text-white text-xs leading-none hover:bg-app-goldDark"
+                title="إزالة الفلتر"
+              >×</button>
+            )}
+          </div>
+
+          {/* From Date */}
+          <div className="relative flex items-center">
+            <input
+              type="date"
+              className={`pl-7 pr-4 py-2 border rounded-xl bg-white outline-none focus:border-app-gold text-sm transition-colors ${fromDate ? 'border-app-gold text-app-goldDark font-bold' : 'border-app-card'}`}
+              value={fromDate}
+              onChange={(e) => { setFromDate(e.target.value); setPageNumber(1); }}
+            />
+            {fromDate && (
+              <button
+                onClick={() => { setFromDate(''); setPageNumber(1); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-app-gold text-white text-xs leading-none hover:bg-app-goldDark"
+                title="إزالة الفلتر"
+              >×</button>
+            )}
+          </div>
+
+          {/* To Date */}
+          <div className="relative flex items-center">
+            <input
+              type="date"
+              className={`pl-7 pr-4 py-2 border rounded-xl bg-white outline-none focus:border-app-gold text-sm transition-colors ${toDate ? 'border-app-gold text-app-goldDark font-bold' : 'border-app-card'}`}
+              value={toDate}
+              onChange={(e) => { setToDate(e.target.value); setPageNumber(1); }}
+            />
+            {toDate && (
+              <button
+                onClick={() => { setToDate(''); setPageNumber(1); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-app-gold text-white text-xs leading-none hover:bg-app-goldDark"
+                title="إزالة الفلتر"
+              >×</button>
+            )}
+          </div>
         </div>
 
         {/* Loading State */}
