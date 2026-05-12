@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
-import { useGetAdminOrders, Order, OrderStatus } from '../requests/useGetAdminOrders';
+import { useGetAdminOrders, Order, OrderStatus, PaymentStatus } from '../requests/useGetAdminOrders';
 import { useChangeOrderStatus, OrderStatusType } from '../requests/useChangeOrderStatus';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ const AdminOrders: React.FC = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
   const [status, setStatus] = useState<OrderStatus>('');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,6 +35,7 @@ const AdminOrders: React.FC = () => {
     pageSize,
     pageNumber,
     status,
+    paymentStatus,
     from: fromDate,
     to: toDate,
     search: debouncedSearch,
@@ -151,11 +153,17 @@ const AdminOrders: React.FC = () => {
 
   const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus as OrderStatus);
-    setPageNumber(1); // Reset to first page on filter change
+    setPageNumber(1);
+  };
+
+  const handlePaymentStatusChange = (newPaymentStatus: string) => {
+    setPaymentStatus(newPaymentStatus as PaymentStatus);
+    setPageNumber(1);
   };
 
   const handleResetFilters = () => {
     setStatus('');
+    setPaymentStatus('');
     setFromDate('');
     setToDate('');
     setSearchQuery('');
@@ -202,18 +210,140 @@ const AdminOrders: React.FC = () => {
     );
   };
 
+  const handlePrint = () => {
+    if (!selectedOrder) return;
+
+    const itemsRows = selectedOrder.items.map((item) => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <img src="${item.product.main_image}" alt="" style="width:50px;height:50px;object-fit:cover;border-radius:6px;border:1px solid #eee" />
+            <div>
+              <div style="font-weight:700;font-size:13px">${item.product.name}</div>
+              <div style="color:#888;font-size:11px">${item.product.brand?.name ?? ''}</div>
+            </div>
+          </div>
+        </td>
+        <td style="text-align:center">${item.quantity}</td>
+        <td style="text-align:center">${item.price} د.ك</td>
+        <td style="text-align:center;font-weight:700">${item.total} د.ك</td>
+      </tr>
+    `).join('');
+
+    const discountRow = parseFloat(selectedOrder.discount) > 0
+      ? `<tr><td colspan="3" style="text-align:left;color:#b8962e">الخصم</td><td style="text-align:center;color:#b8962e;font-weight:700">- ${selectedOrder.discount} د.ك</td></tr>` : '';
+
+    const walletRow = parseFloat(selectedOrder.wallet_amount) > 0
+      ? `<tr><td colspan="3" style="text-align:left;color:#b8962e">خصم رصيد الجوائز</td><td style="text-align:center;color:#b8962e;font-weight:700">- ${selectedOrder.wallet_amount} د.ك</td></tr>` : '';
+
+    const notesRow = selectedOrder.notes
+      ? `<div style="margin-top:20px;padding:12px 16px;background:#fffbe6;border-right:4px solid #D6AD60;border-radius:6px;font-size:13px"><strong>ملاحظات العميل:</strong> ${selectedOrder.notes}</div>` : '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8" />
+        <title>فاتورة - ${selectedOrder.order_number}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet" />
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Cairo', sans-serif; background: #fff; color: #1a1a1a; direction: rtl; }
+          .page { max-width: 800px; margin: 0 auto; padding: 40px 30px; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; border-bottom: 2px solid #D6AD60; margin-bottom: 28px; }
+          .brand { font-size: 26px; font-weight: 900; color: #D6AD60; }
+          .brand span { display: block; font-size: 12px; color: #888; font-weight: 400; margin-top: 2px; }
+          .order-meta { text-align: left; font-size: 13px; }
+          .order-meta strong { display: block; font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+          .order-meta .date { color: #888; font-size: 12px; }
+          .section-title { font-size: 14px; font-weight: 700; color: #D6AD60; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+          .info-box { background: #fafafa; border: 1px solid #eee; border-radius: 10px; padding: 16px; }
+          .info-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px dashed #eee; }
+          .info-row:last-child { border-bottom: none; }
+          .info-row .label { color: #888; }
+          .info-row .val { font-weight: 600; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          thead tr { background: #D6AD60; color: #fff; }
+          thead th { padding: 10px 14px; font-size: 13px; font-weight: 700; }
+          tbody tr { border-bottom: 1px solid #f0f0f0; }
+          tbody tr:nth-child(even) { background: #fafafa; }
+          tbody td { padding: 10px 14px; font-size: 13px; vertical-align: middle; }
+          .totals { background: #fafafa; border: 1px solid #eee; border-radius: 10px; padding: 16px 20px; max-width: 320px; margin-right: auto; }
+          .totals table { margin-bottom: 0; }
+          .totals tr td { padding: 6px 4px; border: none; font-size: 13px; background: transparent; }
+          .totals .grand { font-size: 16px; font-weight: 900; color: #D6AD60; border-top: 2px solid #D6AD60; padding-top: 10px; }
+          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #aaa; }
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="header">
+            <div class="brand">Trendy Hair<span>متجر ترندي هير</span></div>
+            <div class="order-meta">
+              <strong># ${selectedOrder.order_number}</strong>
+              <div class="date">${new Date(selectedOrder.created_at).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' })}</div>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-box">
+              <div class="section-title">بيانات العميل</div>
+              <div class="info-row"><span class="label">الاسم</span><span class="val">${selectedOrder.user.name}</span></div>
+              <div class="info-row"><span class="label">الهاتف</span><span class="val" dir="ltr">${selectedOrder.user.phone}</span></div>
+              ${selectedOrder.user.email ? `<div class="info-row"><span class="label">البريد</span><span class="val">${selectedOrder.user.email}</span></div>` : ''}
+              <div class="info-row"><span class="label">العنوان</span><span class="val">${selectedOrder.governorate.name}، ${selectedOrder.city.name}</span></div>
+            </div>
+            <div class="info-box">
+              <div class="section-title">تفاصيل الطلب</div>
+              <div class="info-row"><span class="label">حالة الطلب</span><span class="val">${selectedOrder.status}</span></div>
+              <div class="info-row"><span class="label">حالة الدفع</span><span class="val">${selectedOrder.payment_status}</span></div>
+              <div class="info-row"><span class="label">طريقة الدفع</span><span class="val">${selectedOrder.payment_type === 'cash' ? 'نقداً' : selectedOrder.payment_type}</span></div>
+              <div class="info-row"><span class="label">عدد المنتجات</span><span class="val">${selectedOrder.items_count}</span></div>
+            </div>
+          </div>
+
+          <div class="section-title">المنتجات</div>
+          <table>
+            <thead><tr><th style="text-align:right">المنتج</th><th style="text-align:center">الكمية</th><th style="text-align:center">السعر</th><th style="text-align:center">الإجمالي</th></tr></thead>
+            <tbody>${itemsRows}</tbody>
+          </table>
+
+          <div class="totals">
+            <table>
+              <tr><td>المجموع الفرعي</td><td style="text-align:left;font-weight:600">${selectedOrder.subtotal} د.ك</td></tr>
+              <tr><td>رسوم التوصيل</td><td style="text-align:left;font-weight:600">${selectedOrder.delivery_cost} د.ك</td></tr>
+              ${discountRow}${walletRow}
+              <tr class="grand"><td>الإجمالي النهائي</td><td style="text-align:left">${selectedOrder.total} د.ك</td></tr>
+            </table>
+          </div>
+
+          ${notesRow}
+
+          <div class="footer">شكراً لتسوقك مع Trendy Hair &bull; trandyhairapp.com</div>
+        </div>
+        <script>window.onload = () => { window.print(); }<\/script>
+      </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
+  };
+
   if (view === 'detail' && selectedOrder) {
     return (
       <div className="space-y-6 animate-fadeIn">
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => setView('list')}
-            className="text-app-textSec hover:text-app-gold font-bold flex items-center gap-2"
-          >
-            ← العودة للقائمة
-          </button>
           <div className="flex gap-2">
-            <button className="bg-white border border-app-card text-app-text px-4 py-2 rounded-xl flex items-center gap-2 font-bold hover:bg-app-bg">
+            <button
+              onClick={handlePrint}
+              className="bg-white border border-app-card text-app-text px-4 py-2 rounded-xl flex items-center gap-2 font-bold hover:bg-app-bg"
+            >
               <Printer size={18} />
               طباعة الفاتورة
             </button>
@@ -232,6 +362,13 @@ const AdminOrders: React.FC = () => {
               )}
             </button>
           </div>
+          <button
+            onClick={() => setView('list')}
+            className="text-app-textSec hover:text-app-gold font-bold flex items-center gap-2"
+          >
+            العودة للقائمة
+            ←
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -395,12 +532,13 @@ const AdminOrders: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          {/* Delivery Status Filter */}
           <select
             className="px-4 py-2 border border-app-card rounded-xl bg-white outline-none focus:border-app-gold text-sm"
             value={status}
             onChange={(e) => handleStatusChange(e.target.value)}
           >
-            <option value="">كل الحالات</option>
+            <option value="">كل حالات التوصيل</option>
             <option value="pending">قيد الانتظار</option>
             <option value="confirmed">مؤكد</option>
             <option value="processing">قيد التجهيز</option>
@@ -408,6 +546,19 @@ const AdminOrders: React.FC = () => {
             <option value="delivered">تم التوصيل</option>
             <option value="completed">مكتمل</option>
             <option value="cancelled">ملغي</option>
+          </select>
+
+          {/* Payment Status Filter */}
+          <select
+            className="px-4 py-2 border border-app-card rounded-xl bg-white outline-none focus:border-app-gold text-sm"
+            value={paymentStatus}
+            onChange={(e) => handlePaymentStatusChange(e.target.value)}
+          >
+            <option value="">كل حالات الدفع</option>
+            <option value="pending">في انتظار الدفع</option>
+            <option value="paid">تم الدفع</option>
+            <option value="failed">فشل الدفع</option>
+            <option value="refunded">تم الإرجاع المالي</option>
           </select>
           <input
             type="date"
@@ -472,7 +623,8 @@ const AdminOrders: React.FC = () => {
                     <th className="px-6 py-4">التاريخ</th>
                     <th className="px-6 py-4">عدد العناصر</th>
                     <th className="px-6 py-4">الإجمالي</th>
-                    <th className="px-6 py-4">الحالة</th>
+                    <th className="px-6 py-4">حالة التوصيل</th>
+                    <th className="px-6 py-4">حالة الدفع</th>
                     <th className="px-6 py-4">إجراءات</th>
                   </tr>
                 </thead>
@@ -488,6 +640,8 @@ const AdminOrders: React.FC = () => {
                       <td className="px-6 py-4">{order.items_count}</td>
                       <td className="px-6 py-4 font-bold text-app-gold">{order.total} د.ك</td>
                       <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
+                      <td className="px-6 py-4"><StatusBadge status={order.payment_status} /></td>
+
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleViewOrder(order)}

@@ -113,12 +113,14 @@ interface AdminOrdersResponse {
     };
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | '';
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | '';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | '';
 
 interface UseGetAdminOrdersParams {
     pageSize?: number;
     pageNumber?: number;
     status?: OrderStatus;
+    paymentStatus?: PaymentStatus;
     from?: string;
     to?: string;
     search?: string;
@@ -134,13 +136,14 @@ export const useGetAdminOrders = ({
     pageSize = 10,
     pageNumber = 1,
     status = '',
+    paymentStatus = '',
     from = '',
     to = '',
     search = '',
     lang = 'ar'
 }: UseGetAdminOrdersParams = {}) => {
     return useQuery<AdminOrdersResponse>({
-        queryKey: ['admin-orders', pageSize, pageNumber, status, from, to, search, lang],
+        queryKey: ['admin-orders', pageSize, pageNumber, status, paymentStatus, from, to, search, lang],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
 
@@ -151,6 +154,7 @@ export const useGetAdminOrders = ({
             };
 
             if (status) params.status = status;
+            if (paymentStatus) params.payment_status = paymentStatus;
             if (from) params.from = from;
             if (to) params.to = to;
             if (search) params.search = search;

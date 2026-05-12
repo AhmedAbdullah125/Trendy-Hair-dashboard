@@ -18,7 +18,8 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
   useAdminTokenRefresh();
 
   const menuItems = [
-    { icon: <LayoutDashboard size={20} />, label: 'لوحة التحكم', path: '/admin/dashboard' },
+    { icon: <ShoppingBag size={20} />, label: 'الطلبات', path: '/admin/orders' },
+    { icon: <LayoutDashboard size={20} />, label: 'التحليلات', path: '/admin/dashboard' },
     { icon: <Package size={20} />, label: 'المنتجات', path: '/admin/products' },
     { icon: <Grid size={20} />, label: 'الأقسام', path: '/admin/categories' },
     { icon: <Tag size={20} />, label: 'العلامات التجارية', path: '/admin/brands' },
@@ -26,7 +27,6 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <Tag size={20} />, label: 'البنرات', path: '/admin/banners' },
     { icon: <Users size={20} />, label: 'المدراء', path: '/admin/admins' },
     { icon: <Users size={20} />, label: 'الموظفين', path: '/admin/employees' },
-    { icon: <ShoppingBag size={20} />, label: 'الطلبات', path: '/admin/orders' },
     { icon: <Users size={20} />, label: 'العملاء', path: '/admin/customers' },
     { icon: <Star size={20} />, label: 'المراجعات', path: '/admin/reviews' },
     { icon: <Layers size={20} />, label: 'المحافظات والمدن', path: '/admin/locations' },

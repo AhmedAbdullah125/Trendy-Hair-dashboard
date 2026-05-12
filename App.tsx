@@ -41,7 +41,7 @@ const AppContent: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout }) 
             <AdminLayout onAdminLogout={onAdminLogout} />
           </ProtectedAdminRoute>
         }>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route index element={<Navigate to="/admin/orders" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="widgets" element={<AdminWidgets />} />
           <Route path="categories" element={<AdminCategories />} />
