@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 const AdminCustomers: React.FC = () => {
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize] = useState(10);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -27,6 +28,7 @@ const AdminCustomers: React.FC = () => {
     const { data, isLoading, isError, error } = useGetAdminUsers({
         pageSize,
         pageNumber,
+        search: searchQuery,
     });
 
     // Mutations
@@ -190,17 +192,32 @@ const AdminCustomers: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-fadeIn">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-app-text">إدارة العملاء</h2>
+            <div className="flex items-center justify-between gap-2">
+                <h2 className="text-2xl font-bold text-app-text whitespace-nowrap">إدارة العملاء</h2>
+
+                <div className="w-full max-w-sm">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="ابحث بالاسم أو الهاتف أو الايميل"
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setPageNumber(1);
+                            }}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:border-app-gold focus:ring-app-gold/20 outline-none"
+                        />
+                    </div>
+                </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="bg-app-gold text-white px-6 py-2 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2"
+                    className="bg-app-gold whitespace-nowrap text-white px-6 py-2 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2"
                 >
                     <Plus size={18} />
                     إضافة عميل جديد
                 </button>
             </div>
-
             <div className="bg-white rounded-2xl shadow-sm border border-app-card/30 overflow-hidden">
                 {/* Loading State */}
                 {isLoading && (

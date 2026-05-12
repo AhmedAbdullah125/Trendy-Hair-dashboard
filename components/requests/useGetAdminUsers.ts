@@ -33,6 +33,7 @@ interface AdminUsersResponse {
 interface UseGetAdminUsersParams {
     pageSize?: number;
     pageNumber?: number;
+    search?: string;
 }
 
 /**
@@ -43,16 +44,21 @@ interface UseGetAdminUsersParams {
 export const useGetAdminUsers = ({
     pageSize = 10,
     pageNumber = 1,
+    search = '',
 }: UseGetAdminUsersParams = {}) => {
     return useQuery<AdminUsersResponse>({
-        queryKey: ['admin-users', pageSize, pageNumber],
+        queryKey: ['admin-users', pageSize, pageNumber, search],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const params = {
+            const params: Record<string, string | number> = {
                 page_size: pageSize,
                 page_number: pageNumber,
             };
+
+            if (search) {
+                params.search = search;
+            }
 
             const response = await axios.get<AdminUsersResponse>(
                 `${API_BASE_URL}/v1/admin/users`,
