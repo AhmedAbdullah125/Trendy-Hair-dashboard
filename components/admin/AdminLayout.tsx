@@ -33,7 +33,7 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     // { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
     { icon: <Gamepad2 size={20} />, label: 'مسابقة تريندي', path: '/admin/game' },
     { icon: <FileBarChart size={20} />, label: 'التقارير', path: '/admin/reports', disabled: true },
-    { icon: <Wallet size={20} />, label: 'المحافظ والنقاط', path: '/admin/wallets', disabled: true },
+    { icon: <Wallet size={20} />, label: 'المحفظة والنقاط', path: '/admin/wallets', disabled: true },
     { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings', disabled: true },
   ];
 

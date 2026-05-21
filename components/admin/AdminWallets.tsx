@@ -4,7 +4,7 @@ import { Award, Coins, Settings, History } from 'lucide-react';
 const AdminWallets: React.FC = () => {
   return (
     <div className="space-y-8 animate-fadeIn">
-      <h2 className="text-2xl font-bold text-app-text">إدارة المحافظ والنقاط</h2>
+      <h2 className="text-2xl font-bold text-app-text">إدارة المحفظة والنقاط</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Rewards Wallet Config */}
