@@ -114,7 +114,7 @@ interface AdminOrdersResponse {
 }
 
 export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | '';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | '';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'cash' | '';
 
 interface UseGetAdminOrdersParams {
     pageSize?: number;

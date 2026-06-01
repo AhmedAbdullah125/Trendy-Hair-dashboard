@@ -109,7 +109,7 @@ const AdminOrders: React.FC = () => {
       'الخصم': parseFloat(order.discount),
       'المحفظة': parseFloat(order.wallet_amount),
       'الإجمالي': parseFloat(order.total),
-      'طريقة الدفع': order.payment_type,
+      'طريقة الدفع': order.payment_type === 'cash' ? 'نقداً (الدفع عند الاستلام)' : order.payment_type === 'knet' ? 'كي نت (Knet)' : order.payment_type,
       'حالة الدفع': getStatusInfo(order.payment_status).label,
       'حالة الطلب': getStatusInfo(order.status).label,
       'التاريخ': new Date(order.created_at).toLocaleDateString('ar-EG'),
@@ -197,6 +197,8 @@ const AdminOrders: React.FC = () => {
       'فشل الدفع': { label: 'فشل الدفع', colors: 'bg-red-100 text-red-600' },
       'فشل': { label: 'فشل', colors: 'bg-red-100 text-red-600' },
       'قيد الدفع': { label: 'قيد الدفع', colors: 'bg-yellow-100 text-yellow-700' },
+      'cash': { label: 'الدفع عند الاستلام', colors: 'bg-blue-100 text-blue-700' },
+      'الدفع عند الاستلام': { label: 'الدفع عند الاستلام', colors: 'bg-blue-100 text-blue-700' },
     };
     return statusMap[status] || { label: status, colors: 'bg-gray-100 text-gray-600' };
   };
@@ -299,7 +301,7 @@ const AdminOrders: React.FC = () => {
               <div class="section-title">تفاصيل الطلب</div>
               <div class="info-row"><span class="label">حالة الطلب</span><span class="val">${selectedOrder.status}</span></div>
               <div class="info-row"><span class="label">حالة الدفع</span><span class="val">${selectedOrder.payment_status}</span></div>
-              <div class="info-row"><span class="label">طريقة الدفع</span><span class="val">${selectedOrder.payment_type === 'cash' ? 'نقداً' : selectedOrder.payment_type}</span></div>
+              <div class="info-row"><span class="label">طريقة الدفع</span><span class="val">${selectedOrder.payment_type === 'cash' ? 'نقداً (الدفع عند الاستلام)' : selectedOrder.payment_type === 'knet' ? 'كي نت (Knet)' : selectedOrder.payment_type}</span></div>
               <div class="info-row"><span class="label">عدد المنتجات</span><span class="val">${selectedOrder.items_count}</span></div>
             </div>
           </div>
@@ -427,7 +429,13 @@ const AdminOrders: React.FC = () => {
                 </div>
                 <div className="mt-4 pt-4 border-t border-app-card/30">
                   <p className="text-xs text-app-textSec mb-1">طريقة الدفع</p>
-                  <p className="font-bold text-app-text capitalize">{selectedOrder.payment_type}</p>
+                  <p className="font-bold text-app-text capitalize">
+                    {selectedOrder.payment_type === 'cash' 
+                      ? 'نقداً (الدفع عند الاستلام)' 
+                      : selectedOrder.payment_type === 'knet' 
+                        ? 'كي نت (Knet)' 
+                        : selectedOrder.payment_type}
+                  </p>
                   <p className="text-xs text-app-textSec mt-2 mb-1">حالة الدفع</p>
                   <StatusBadge status={selectedOrder.payment_status} />
                 </div>
@@ -571,6 +579,7 @@ const AdminOrders: React.FC = () => {
               <option value="paid">تم الدفع</option>
               <option value="failed">فشل الدفع</option>
               <option value="refunded">تم الإرجاع المالي</option>
+              <option value="cash">الدفع عند الاستلام</option>
             </select>
             {paymentStatus && (
               <button
