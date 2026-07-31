@@ -95,7 +95,9 @@ function StageModal({ stage, onClose }: { stage: CompetitionStage | null, onClos
         name: stage?.name || '',
         status: stage?.status || 'active',
         question_time: stage?.question_time || 20,
-        prize: stage?.prize ? parseInt(stage.prize) : 10,
+        // prize is decimal(12,3) server-side and arrives as "10.500";
+        // parseInt would silently save it back as 10.
+        prize: stage?.prize ? parseFloat(stage.prize) : 10,
         sort_by: stage?.sort_by || 1,
         stage_number_of_questions: stage?.stage_number_of_questions || 5
     });
@@ -142,7 +144,7 @@ function StageModal({ stage, onClose }: { stage: CompetitionStage | null, onClos
                         </div>
                         <div>
                             <label className="block text-sm font-bold mb-2">الجائزة</label>
-                            <input type="number" value={formData.prize} onChange={e => setFormData({...formData, prize: parseInt(e.target.value)})} className="w-full p-2 border rounded-xl" required />
+                            <input type="number" step="0.001" value={formData.prize} onChange={e => setFormData({...formData, prize: parseFloat(e.target.value)})} className="w-full p-2 border rounded-xl" required />
                         </div>
                         <div>
                             <label className="block text-sm font-bold mb-2">الأسئلة المطلوبة للفوز</label>

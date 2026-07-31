@@ -65,6 +65,17 @@ export interface Product {
   categoryId?: string;
   isNew?: boolean; // For "وصلنا حديثاً"
   isActive?: boolean;
+
+  // Produced by mapApiProductToComponent() from real API fields. These were
+  // missing from the interface, which only compiled because an earlier type
+  // error in the mapper masked them.
+  categoryName?: string;
+  brandName?: string;
+  isFeatured?: boolean;
+  stockStatus?: string;
+  inStock?: boolean;
+  quantity?: number;
+  isFavorite?: boolean;
 }
 
 export interface Package {

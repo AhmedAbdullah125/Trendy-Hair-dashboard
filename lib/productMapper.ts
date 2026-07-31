@@ -47,7 +47,9 @@ export const mapApiProductToComponent = (apiProduct: ApiProduct): Product => {
         image: apiProduct.main_image,
         categoryId: apiProduct.category.id.toString(),
         categoryName: apiProduct.category.name,
-        brandId: apiProduct.brand.id.toString(),
+        // Product.brandId is a number and consumers treat it as one; the stray
+        // .toString() here was the only string source.
+        brandId: apiProduct.brand.id,
         brandName: apiProduct.brand.name,
         isNew: apiProduct.is_recently,
         isFeatured: false, // Not provided by API
