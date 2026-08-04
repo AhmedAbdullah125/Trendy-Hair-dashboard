@@ -13,7 +13,13 @@ export interface AdminSettings {
     privacy_policy: string | null;
     competition_interval_minutes: string | null;
     competition_question_time: string | null;
+    /** Lockout after losing a run. Default 1440 (24h). */
+    competition_block_minutes: string | null;
     game_balance_cap: string | null;
+    /** Points that make up one dinar — drives both earning and redemption. */
+    points_per_dinar: string | null;
+    /** Dinars a balance must reach before redemption is offered. 0 = no minimum. */
+    min_wallet_redemption: string | null;
 }
 
 interface SettingsResponse {

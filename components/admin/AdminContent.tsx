@@ -24,7 +24,10 @@ type EditableKeys =
   | 'phone'
   | 'competition_interval_minutes'
   | 'competition_question_time'
-  | 'game_balance_cap';
+  | 'competition_block_minutes'
+  | 'game_balance_cap'
+  | 'points_per_dinar'
+  | 'min_wallet_redemption';
 
 const EMPTY: Record<EditableKeys, string> = {
   tech_booking_url: '',
@@ -33,7 +36,10 @@ const EMPTY: Record<EditableKeys, string> = {
   phone: '',
   competition_interval_minutes: '',
   competition_question_time: '',
+  competition_block_minutes: '',
   game_balance_cap: '',
+  points_per_dinar: '',
+  min_wallet_redemption: '',
 };
 
 const AdminContent: React.FC = () => {
@@ -54,7 +60,10 @@ const AdminContent: React.FC = () => {
       phone: settings.phone ?? '',
       competition_interval_minutes: settings.competition_interval_minutes ?? '',
       competition_question_time: settings.competition_question_time ?? '',
+      competition_block_minutes: settings.competition_block_minutes ?? '',
       game_balance_cap: settings.game_balance_cap ?? '',
+      points_per_dinar: settings.points_per_dinar ?? '',
+      min_wallet_redemption: settings.min_wallet_redemption ?? '',
     });
   }, [data]);
 
@@ -199,11 +208,11 @@ const AdminContent: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-app-text mb-2">الحد الأقصى للرصيد (د.ك)</label>
+            <label className="block text-sm font-bold text-app-text mb-2">الحد الأقصى للرصيد (نقطة)</label>
             <input
               type="number"
               min={0}
-              step="0.001"
+              step="1"
               placeholder="اتركه فارغاً لإلغاء الحد"
               className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
               value={form.game_balance_cap}
@@ -211,6 +220,50 @@ const AdminContent: React.FC = () => {
             />
             <p className="text-[11px] text-app-textSec mt-1">
               عند بلوغ العميل هذا الرصيد يتوقف عن اللعب. اتركه فارغاً لإلغاء الحد.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-app-text mb-2">مدة الحظر بعد الخسارة (دقيقة)</label>
+            <input
+              type="number"
+              min={0}
+              className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
+              value={form.competition_block_minutes}
+              onChange={set('competition_block_minutes')}
+            />
+            <p className="text-[11px] text-app-textSec mt-1">
+              المدة التي لا يستطيع فيها العميل اللعب بعد خسارة الجولة. الافتراضي 1440 دقيقة (24 ساعة).
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-app-text mb-2">عدد النقاط لكل دينار</label>
+            <input
+              type="number"
+              min={1}
+              className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
+              value={form.points_per_dinar}
+              onChange={set('points_per_dinar')}
+            />
+            <p className="text-[11px] text-app-textSec mt-1">
+              يحدد قيمة النقطة عند الخصم. تغييره يغيّر قيمة كل الأرصدة الحالية.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-app-text mb-2">أقل رصيد قابل للاستخدام (د.ك)</label>
+            <input
+              type="number"
+              min={0}
+              step="0.001"
+              placeholder="0 = بدون حد أدنى"
+              className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
+              value={form.min_wallet_redemption}
+              onChange={set('min_wallet_redemption')}
+            />
+            <p className="text-[11px] text-app-textSec mt-1">
+              لا يظهر خيار استخدام النقاط في السلة قبل بلوغ هذه القيمة.
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
 import { useGetAdminOrders, Order, OrderStatus, PaymentStatus } from '../requests/useGetAdminOrders';
 import { useChangeOrderStatus, OrderStatusType } from '../requests/useChangeOrderStatus';
+import { useMarkOrderPaid } from '../requests/useMarkOrderPaid';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -44,6 +45,7 @@ const AdminOrders: React.FC = () => {
 
   // Change order status mutation
   const changeOrderStatusMutation = useChangeOrderStatus();
+  const markOrderPaidMutation = useMarkOrderPaid();
 
   const orders = data?.items?.data || [];
   const pagination = data?.items?.pagination;
@@ -101,30 +103,21 @@ const AdminOrders: React.FC = () => {
     order.payment_status !== 'Paid';
 
   /**
-   * Records payment for a cash order.
+   * Records payment for a cash order, leaving its delivery status alone.
    *
-   * The API has no "mark paid" endpoint: it flips `payment_status` to paid — and
-   * debits the customer's wallet — as a side effect of the order becoming
-   * `delivered`. So that is what this sends, and the confirmation says so.
-   * See BACKEND_ISSUES.md.
+   * Uses the dedicated `mark-paid` endpoint. This previously had to post
+   * `status: delivered`, because settling a cash order was only possible as a
+   * side effect of declaring it delivered.
    */
   const handleMarkAsPaid = async () => {
     if (!selectedOrder) return;
 
     try {
-      await changeOrderStatusMutation.mutateAsync({
-        orderId: selectedOrder.id,
-        status: 'delivered',
-      });
+      await markOrderPaidMutation.mutateAsync(selectedOrder.id);
 
-      setSelectedOrder({
-        ...selectedOrder,
-        status: 'delivered',
-        payment_status: 'مدفوع',
-      });
-      setSelectedStatus('delivered');
+      setSelectedOrder({ ...selectedOrder, payment_status: 'مدفوع' });
       setShowMarkPaidConfirm(false);
-      toast.success('تم تسجيل الدفع وتحديث حالة الطلب إلى "تم التوصيل"');
+      toast.success('تم تسجيل الدفع بنجاح');
     } catch (error) {
       console.error('Error marking order as paid:', error);
       setShowMarkPaidConfirm(false);
@@ -487,7 +480,7 @@ const AdminOrders: React.FC = () => {
                   {isUnpaidCashOrder(selectedOrder) && (
                     <button
                       onClick={() => setShowMarkPaidConfirm(true)}
-                      disabled={changeOrderStatusMutation.isPending}
+                      disabled={markOrderPaidMutation.isPending}
                       className="mt-4 w-full bg-green-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 size={18} />
@@ -569,31 +562,32 @@ const AdminOrders: React.FC = () => {
               </p>
 
               <ul className="text-sm text-app-text bg-app-bg border border-app-card rounded-xl p-4 mb-4 space-y-2 list-disc pr-5">
-                <li>سيتم تغيير حالة الطلب إلى <span className="font-bold">"تم التوصيل"</span>.</li>
+                <li>لن تتغير حالة التوصيل — سيتم تسجيل الدفع فقط.</li>
                 {parseFloat(selectedOrder.wallet_amount) > 0 && (
                   <li>
-                    سيتم خصم{' '}
+                    سيتم خصم ما يعادل{' '}
                     <span className="font-bold text-app-gold">{selectedOrder.wallet_amount} د.ك</span>{' '}
-                    من رصيد جوائز العميل.
+                    من نقاط العميل.
                   </li>
                 )}
+                <li>سيتم إضافة نقاط الشراء إلى رصيد العميل.</li>
                 <li className="text-red-600 font-bold">لا يمكن التراجع عن هذا الإجراء من لوحة التحكم.</li>
               </ul>
 
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => setShowMarkPaidConfirm(false)}
-                  disabled={changeOrderStatusMutation.isPending}
+                  disabled={markOrderPaidMutation.isPending}
                   className="px-6 py-3 border border-app-card rounded-xl font-bold text-app-textSec hover:bg-app-bg transition-colors disabled:opacity-50"
                 >
                   إلغاء
                 </button>
                 <button
                   onClick={handleMarkAsPaid}
-                  disabled={changeOrderStatusMutation.isPending}
+                  disabled={markOrderPaidMutation.isPending}
                   className="px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {changeOrderStatusMutation.isPending && <Loader2 size={18} className="animate-spin" />}
+                  {markOrderPaidMutation.isPending && <Loader2 size={18} className="animate-spin" />}
                   <span>تأكيد</span>
                 </button>
               </div>

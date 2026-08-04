@@ -278,7 +278,10 @@ const AdminCustomers: React.FC = () => {
                                             <td className="px-6 py-4 font-bold text-app-text">{user.name}</td>
                                             <td className="px-6 py-4 text-app-textSec">{user.email || '-'}</td>
                                             <td className="px-6 py-4 text-app-textSec" dir="ltr">{user.phone}</td>
-                                            <td className="px-6 py-4 font-bold text-app-gold">{user.wallet} د.ك</td>
+                                            {/* The wallet column holds points, not dinars. */}
+                                            <td className="px-6 py-4 font-bold text-app-gold">
+                                                {Math.round(Number(user.wallet) || 0).toLocaleString('en-US')} نقطة
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <VerifyBadge isVerify={user.is_verify} />
                                             </td>

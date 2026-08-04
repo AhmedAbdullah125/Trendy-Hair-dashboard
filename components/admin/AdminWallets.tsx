@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { History, Search, AlertCircle, Loader2, Inbox } from 'lucide-react';
 import { useGetWalletTransactions, WalletTransaction } from '../requests/useGetWalletTransactions';
 
+/** The ledger is denominated in whole points, so no decimals. */
+const formatPoints = (value: number): string =>
+    Math.round(Number(value) || 0).toLocaleString('en-US');
+
 /**
  * Wallet / points ledger.
  *
@@ -162,9 +166,9 @@ const AdminWallets: React.FC = () => {
                                             }`}
                                         >
                                             {transaction.amount > 0 ? '+' : ''}
-                                            {transaction.amount.toFixed(3)} د.ك
+                                            {formatPoints(transaction.amount)} نقطة
                                         </td>
-                                        <td className="px-6 py-4 text-app-textSec">{transaction.balance.toFixed(3)} د.ك</td>
+                                        <td className="px-6 py-4 text-app-textSec">{formatPoints(transaction.balance)} نقطة</td>
                                         <td className="px-6 py-4 text-app-textSec">{transaction.created_at}</td>
                                     </tr>
                                 ))}
