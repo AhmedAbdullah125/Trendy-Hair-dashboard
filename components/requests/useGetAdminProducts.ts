@@ -21,7 +21,7 @@ interface ProductCategory {
     is_active: number;
 }
 
-interface AdminProduct {
+export interface AdminProduct {
     id: number;
     name_en: string;
     name_ar: string;

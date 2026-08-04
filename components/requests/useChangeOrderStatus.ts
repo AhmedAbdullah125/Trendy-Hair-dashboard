@@ -46,6 +46,12 @@ export const useChangeOrderStatus = () => {
         onSuccess: () => {
             // Invalidate and refetch orders
             queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+
+            // Moving a cash order to "delivered" also marks it paid and debits
+            // the customer's wallet server-side, so anything showing a balance
+            // or the wallet ledger is now stale.
+            queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+            queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] });
         },
     });
 };

@@ -9,6 +9,7 @@ const AdminOrders: React.FC = () => {
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatusType>('pending');
+  const [showMarkPaidConfirm, setShowMarkPaidConfirm] = useState(false);
 
   // Filter and pagination state
   const [pageNumber, setPageNumber] = useState(1);
@@ -85,6 +86,49 @@ const AdminOrders: React.FC = () => {
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('حدث خطأ أثناء تحديث حالة الطلب');
+    }
+  };
+
+  /**
+   * Cash-on-delivery orders that have not been settled yet.
+   *
+   * `payment_status` arrives localised from the API, so both spellings are
+   * matched rather than the raw enum value.
+   */
+  const isUnpaidCashOrder = (order: Order): boolean =>
+    order.payment_type === 'cash' &&
+    order.payment_status !== 'مدفوع' &&
+    order.payment_status !== 'Paid';
+
+  /**
+   * Records payment for a cash order.
+   *
+   * The API has no "mark paid" endpoint: it flips `payment_status` to paid — and
+   * debits the customer's wallet — as a side effect of the order becoming
+   * `delivered`. So that is what this sends, and the confirmation says so.
+   * See BACKEND_ISSUES.md.
+   */
+  const handleMarkAsPaid = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      await changeOrderStatusMutation.mutateAsync({
+        orderId: selectedOrder.id,
+        status: 'delivered',
+      });
+
+      setSelectedOrder({
+        ...selectedOrder,
+        status: 'delivered',
+        payment_status: 'مدفوع',
+      });
+      setSelectedStatus('delivered');
+      setShowMarkPaidConfirm(false);
+      toast.success('تم تسجيل الدفع وتحديث حالة الطلب إلى "تم التوصيل"');
+    } catch (error) {
+      console.error('Error marking order as paid:', error);
+      setShowMarkPaidConfirm(false);
+      toast.error('حدث خطأ أثناء تسجيل الدفع');
     }
   };
 
@@ -438,6 +482,18 @@ const AdminOrders: React.FC = () => {
                   </p>
                   <p className="text-xs text-app-textSec mt-2 mb-1">حالة الدفع</p>
                   <StatusBadge status={selectedOrder.payment_status} />
+
+                  {/* Cash is collected by the courier, so payment is recorded here. */}
+                  {isUnpaidCashOrder(selectedOrder) && (
+                    <button
+                      onClick={() => setShowMarkPaidConfirm(true)}
+                      disabled={changeOrderStatusMutation.isPending}
+                      className="mt-4 w-full bg-green-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 size={18} />
+                      <span>تحديد كمدفوع</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -501,6 +557,49 @@ const AdminOrders: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Mark-as-paid confirmation — this move is not reversible from here */}
+        {showMarkPaidConfirm && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-app-text mb-4">تأكيد تسجيل الدفع</h3>
+
+              <p className="text-sm text-app-textSec mb-4 leading-relaxed">
+                سيتم تسجيل الطلب رقم <span className="font-bold text-app-text">{selectedOrder.order_number}</span> كمدفوع.
+              </p>
+
+              <ul className="text-sm text-app-text bg-app-bg border border-app-card rounded-xl p-4 mb-4 space-y-2 list-disc pr-5">
+                <li>سيتم تغيير حالة الطلب إلى <span className="font-bold">"تم التوصيل"</span>.</li>
+                {parseFloat(selectedOrder.wallet_amount) > 0 && (
+                  <li>
+                    سيتم خصم{' '}
+                    <span className="font-bold text-app-gold">{selectedOrder.wallet_amount} د.ك</span>{' '}
+                    من رصيد جوائز العميل.
+                  </li>
+                )}
+                <li className="text-red-600 font-bold">لا يمكن التراجع عن هذا الإجراء من لوحة التحكم.</li>
+              </ul>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowMarkPaidConfirm(false)}
+                  disabled={changeOrderStatusMutation.isPending}
+                  className="px-6 py-3 border border-app-card rounded-xl font-bold text-app-textSec hover:bg-app-bg transition-colors disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleMarkAsPaid}
+                  disabled={changeOrderStatusMutation.isPending}
+                  className="px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {changeOrderStatusMutation.isPending && <Loader2 size={18} className="animate-spin" />}
+                  <span>تأكيد</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

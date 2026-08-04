@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, ChevronLeft, ChevronRight, CheckCircle2, X } from 'lucide-react';
+import { Plus, Edit3, Trash2, ChevronLeft, ChevronRight, CheckCircle2, X, Eye } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useGetAdminProducts } from '../requests/useGetAdminProducts';
+import { useGetAdminProducts, type AdminProduct } from '../requests/useGetAdminProducts';
 import { useDeleteAdminProduct } from '../requests/useDeleteAdminProduct';
 import { useAddAdminProduct } from '../requests/useAddAdminProduct';
 import { useUpdateAdminProduct } from '../requests/useUpdateAdminProduct';
@@ -31,6 +31,39 @@ interface ProductFormData {
   existingImages?: { id: number; url: string }[];
 }
 
+/**
+ * Price column.
+ *
+ * `has_discount` is only true when `discounted_price < price`, but checkout
+ * always charges `discounted_price` when it is set. Keying the display off
+ * `has_discount` therefore hid the price customers are actually billed whenever
+ * the discounted value was not strictly lower — so this keys off the value
+ * itself and calls out the inconsistent case instead of hiding it.
+ */
+const PriceCell: React.FC<{ product: AdminProduct }> = ({ product }) => {
+  const discounted = product.discounted_price;
+
+  if (discounted === null || discounted === undefined) {
+    return <div className="font-bold text-app-gold">{product.price} د.ك</div>;
+  }
+
+  const isLower = discounted < product.price;
+
+  return (
+    <div>
+      <div className="font-bold text-app-gold">{discounted} د.ك</div>
+      <div className={`text-xs text-app-textSec ${isLower ? 'line-through' : ''}`}>
+        {product.price} د.ك
+      </div>
+      {!isLower && (
+        <div className="text-[10px] text-red-600 font-bold mt-1">
+          السعر المخفّض ليس أقل من السعر الأساسي
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminProducts: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,6 +77,9 @@ const AdminProducts: React.FC = () => {
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
+  // Products are synced from Shopify, so add/edit/delete are disabled. This is
+  // the only way to inspect one.
+  const [viewingProduct, setViewingProduct] = useState<AdminProduct | null>(null);
 
   // Fetch products from API
   const { data, isLoading, error, refetch } = useGetAdminProducts(pageSize, currentPage, 'ar', categoryFilter, brandFilter);
@@ -289,14 +325,7 @@ const AdminProducts: React.FC = () => {
                     <td className="px-6 py-4 text-app-textSec">{p.brand.name_ar}</td>
                     <td className="px-6 py-4 text-app-textSec">{p.category.name_ar}</td>
                     <td className="px-6 py-4">
-                      {p.has_discount ? (
-                        <div>
-                          <div className="font-bold text-app-gold">{p.discounted_price} د.ك</div>
-                          <div className="text-xs text-app-textSec line-through">{p.price} د.ك</div>
-                        </div>
-                      ) : (
-                        <div className="font-bold text-app-gold">{p.price} د.ك</div>
-                      )}
+                      <PriceCell product={p} />
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-xs font-bold ${p.in_stock ? 'text-green-600' : 'text-red-600'}`}>
@@ -309,6 +338,13 @@ const AdminProducts: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 flex gap-2">
+                      <button
+                        onClick={() => setViewingProduct(p)}
+                        title="عرض التفاصيل"
+                        className="p-2 text-app-gold hover:bg-app-bg rounded-lg transition-colors"
+                      >
+                        <Eye size={18} />
+                      </button>
                       <button
                         disabled
                         onClick={() => openEditModal(p)}
@@ -685,6 +721,101 @@ const AdminProducts: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Read-only product details — the only way to inspect a Shopify product */}
+      {viewingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+
+            <div className="flex items-center justify-between p-6 border-b border-app-card/30">
+              <h3 className="text-xl font-bold text-app-text">تفاصيل المنتج</h3>
+              <button
+                onClick={() => setViewingProduct(null)}
+                className="p-2 text-app-textSec hover:bg-app-bg rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-6">
+              <div className="flex gap-4">
+                <div className="w-28 h-28 rounded-xl overflow-hidden border border-app-card shrink-0">
+                  <img src={viewingProduct.main_image} className="w-full h-full object-cover" alt="" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-app-text text-lg break-words">{viewingProduct.name_ar}</p>
+                  <p className="text-sm text-app-textSec break-words">{viewingProduct.name_en}</p>
+                  <p className="text-xs text-app-textSec mt-2">SKU: {viewingProduct.sku || '—'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-app-bg rounded-xl p-4">
+                  <p className="text-xs text-app-textSec mb-1">السعر الأساسي</p>
+                  <p className="font-bold text-app-text">{viewingProduct.price} د.ك</p>
+                </div>
+                <div className="bg-app-bg rounded-xl p-4">
+                  <p className="text-xs text-app-textSec mb-1">السعر المخفّض</p>
+                  <p className="font-bold text-app-gold">
+                    {viewingProduct.discounted_price ?? '—'}
+                    {viewingProduct.discounted_price != null ? ' د.ك' : ''}
+                  </p>
+                </div>
+                <div className="bg-app-bg rounded-xl p-4">
+                  <p className="text-xs text-app-textSec mb-1">العلامة التجارية</p>
+                  <p className="font-bold text-app-text">{viewingProduct.brand?.name_ar || '—'}</p>
+                </div>
+                <div className="bg-app-bg rounded-xl p-4">
+                  <p className="text-xs text-app-textSec mb-1">القسم</p>
+                  <p className="font-bold text-app-text">{viewingProduct.category?.name_ar || '—'}</p>
+                </div>
+                <div className="bg-app-bg rounded-xl p-4">
+                  <p className="text-xs text-app-textSec mb-1">المخزون</p>
+                  <p className={`font-bold ${viewingProduct.in_stock ? 'text-green-600' : 'text-red-600'}`}>
+                    {viewingProduct.quantity} ({viewingProduct.stock_status})
+                  </p>
+                </div>
+                <div className="bg-app-bg rounded-xl p-4">
+                  <p className="text-xs text-app-textSec mb-1">الحالة</p>
+                  <p className={`font-bold ${viewingProduct.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                    {viewingProduct.is_active ? 'نشط' : 'غير نشط'}
+                  </p>
+                </div>
+              </div>
+
+              {/* The price the customer is actually billed, stated plainly. */}
+              <div className="bg-app-gold/10 border border-app-gold/30 rounded-xl p-4">
+                <p className="text-xs text-app-textSec mb-1">السعر الذي يُحتسب عند الشراء</p>
+                <p className="font-bold text-app-gold text-lg">
+                  {viewingProduct.discounted_price ?? viewingProduct.price} د.ك
+                </p>
+              </div>
+
+              {viewingProduct.description_ar && (
+                <div>
+                  <p className="text-xs text-app-textSec mb-2">الوصف</p>
+                  <p className="text-sm text-app-text leading-relaxed whitespace-pre-line">
+                    {viewingProduct.description_ar}
+                  </p>
+                </div>
+              )}
+
+              <p className="text-xs text-app-textSec bg-app-bg rounded-xl p-3">
+                بيانات المنتجات تُزامَن من شوبيفاي، لذلك لا يمكن تعديلها من لوحة التحكم.
+              </p>
+            </div>
+
+            <div className="p-6 bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setViewingProduct(null)}
+                className="px-8 py-3 bg-app-gold text-white font-bold rounded-xl hover:bg-app-goldDark transition-colors"
+              >
+                إغلاق
+              </button>
+            </div>
           </div>
         </div>
       )}
