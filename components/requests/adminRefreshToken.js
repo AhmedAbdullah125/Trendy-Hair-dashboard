@@ -20,15 +20,39 @@ export async function adminRefreshToken(setLoading, lang) {
 
         setLoading(false);
         if (response.data.status) {
-            // Extract token and admin from the response structure
-            const tokenData = response.data.items.token;
-            const adminData = response.data.items.admin;
+            const items = response?.data?.items ?? {};
 
-            // Update admin tokens
+            // This endpoint puts the token fields at the TOP LEVEL of `items`
+            // ({token_type, expires_in, access_token, refresh_token}) — unlike
+            // login, which nests them under `items.token` and also returns
+            // `admin` and `permissions`.
+            //
+            // Reading `items.token` here gave `undefined`, so
+            // `tokenData.access_token` threw a TypeError, the catch below
+            // reported failure, and `useAdminTokenRefresh` signed the admin
+            // out — on a refresh that had in fact succeeded. Accept either
+            // shape so this survives the endpoint being aligned later.
+            const tokenData = items.token ?? items;
+
+            if (!tokenData?.access_token) {
+                return { success: false, error: 'No access token in refresh response' };
+            }
+
             localStorage.setItem("admin_token", tokenData.access_token);
-            localStorage.setItem("admin_refresh_token", tokenData.refresh_token);
-            localStorage.setItem("admin_user", JSON.stringify(adminData));
-            localStorage.setItem("admin_permissions", JSON.stringify(response?.data?.items?.permissions || []));
+            if (tokenData.refresh_token) {
+                localStorage.setItem("admin_refresh_token", tokenData.refresh_token);
+            }
+
+            // Absent on this endpoint. Only overwrite when actually returned —
+            // storing `undefined` wiped the identity and permission set that
+            // login had correctly stored, which is what gates the sidebar.
+            if (items.admin) {
+                localStorage.setItem("admin_user", JSON.stringify(items.admin));
+            }
+            if (Array.isArray(items.permissions)) {
+                localStorage.setItem("admin_permissions", JSON.stringify(items.permissions));
+            }
+
             localStorage.setItem("admin_last_refresh_time", Date.now().toString());
 
             return { success: true }; // Indicate success

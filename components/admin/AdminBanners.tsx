@@ -5,6 +5,7 @@ import { useCreateAdminBanner, CreateAdminBannerParams } from '../requests/useCr
 import { useUpdateAdminBanner, UpdateAdminBannerParams } from '../requests/useUpdateAdminBanner';
 import { useDeleteAdminBanner } from '../requests/useDeleteAdminBanner';
 import { toast } from 'sonner';
+import { validateBanner, hasBannerErrors, isSafeBannerUrl, type BannerFieldErrors } from '../../lib/bannerValidation';
 
 const AdminBanners: React.FC = () => {
     const [pageNumber, setPageNumber] = useState(1);
@@ -84,17 +85,28 @@ const AdminBanners: React.FC = () => {
         }
     };
 
+    const [errors, setErrors] = useState<BannerFieldErrors>({});
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validation
-        if (!formData.title_ar || !formData.title_en || !formData.url) {
-            toast.error('يرجى ملء جميع الحقول المطلوبة');
-            return;
-        }
+        // Mirrors the server rules (ValidatesBannerFields) so a bad title or
+        // link is caught here with a field-level message, rather than coming
+        // back as a 422 that does not say which field failed.
+        const fieldErrors = validateBanner(
+            {
+                title_ar: formData.title_ar,
+                title_en: formData.title_en,
+                url: formData.url,
+                position: formData.position,
+                image: formData.image,
+            },
+            !!editingBanner
+        );
+        setErrors(fieldErrors);
 
-        if (!editingBanner && !formData.image) {
-            toast.error('يرجى اختيار صورة للبانر');
+        if (hasBannerErrors(fieldErrors)) {
+            toast.error(Object.values(fieldErrors)[0]);
             return;
         }
 
@@ -233,15 +245,28 @@ const AdminBanners: React.FC = () => {
                                             <td className="px-6 py-4 font-bold text-app-text">{banner.title_ar}</td>
                                             <td className="px-6 py-4 text-app-textSec">{banner.title_en}</td>
                                             <td className="px-6 py-4">
-                                                <a
-                                                    href={banner.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-600 hover:underline flex items-center gap-1 text-xs"
-                                                >
-                                                    <LinkIcon size={12} />
-                                                    {banner.url}
-                                                </a>
+                                                {/* Rows predating the server-side link rules can hold
+                                                    anything, including javascript: URIs. Only render a
+                                                    real anchor for a link that passes the same check. */}
+                                                {isSafeBannerUrl(banner.url) ? (
+                                                    <a
+                                                        href={banner.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:underline flex items-center gap-1 text-xs"
+                                                    >
+                                                        <LinkIcon size={12} />
+                                                        {banner.url}
+                                                    </a>
+                                                ) : (
+                                                    <span
+                                                        className="text-app-textSec flex items-center gap-1 text-xs"
+                                                        title={banner.url ? 'رابط غير صالح — عدّل البانر لإصلاحه' : undefined}
+                                                    >
+                                                        <LinkIcon size={12} />
+                                                        {banner.url || '—'}
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="px-2 py-1 bg-app-bg rounded font-bold">{banner.position}</span>
@@ -361,6 +386,7 @@ const AdminBanners: React.FC = () => {
                                     placeholder="أدخل عنوان البانر بالعربية"
                                     required
                                 />
+                                {errors.title_ar && <p className="mt-1 text-xs text-red-500 font-bold">{errors.title_ar}</p>}
                             </div>
 
                             {/* English Title */}
@@ -377,22 +403,23 @@ const AdminBanners: React.FC = () => {
                                     required
                                     dir="ltr"
                                 />
+                                {errors.title_en && <p className="mt-1 text-xs text-red-500 font-bold">{errors.title_en}</p>}
                             </div>
 
                             {/* URL */}
                             <div>
                                 <label className="block text-sm font-bold text-app-text mb-2">
-                                    الرابط <span className="text-red-500">*</span>
+                                    الرابط <span className="text-app-textSec font-normal">(اختياري)</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.url}
                                     onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                                     className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
-                                    placeholder="/products أو /categories/hair-care"
-                                    required
+                                    placeholder="/products أو https://example.com"
                                     dir="ltr"
                                 />
+                                {errors.url && <p className="mt-1 text-xs text-red-500 font-bold">{errors.url}</p>}
                             </div>
 
                             {/* Position */}

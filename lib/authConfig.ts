@@ -1,40 +1,27 @@
 /**
  * OAuth client configuration.
  *
- * ─────────────────────────────────────────────────────────────────────────
- * READ THIS BEFORE CHANGING ANYTHING HERE
- * ─────────────────────────────────────────────────────────────────────────
- * A browser application cannot keep a secret. Moving the client secret out of
- * source and into `VITE_OAUTH_CLIENT_SECRET` stops it being committed to the
- * repository, but Vite **inlines `import.meta.env` values at build time**, so
- * a secret supplied at build still ends up readable in `dist/`.
+ * The apps no longer ship OAuth credentials. The server resolves the password-grant
+ * client itself from `config('passport.clients.admins')` — backend `9163945`
+ * made `client_id` / `client_secret` optional, and `07dc8de` fixed the resolved
+ * client never reaching Passport.
  *
- * This module is therefore not a fix for the exposure. It does two real things:
+ * That is what finally removed the secret from the bundle. Moving it to
+ * `VITE_OAUTH_CLIENT_SECRET` never could: Vite inlines `import.meta.env` at build
+ * time, so an env-supplied secret is just as readable in `dist/`.
  *
- *   1. Takes the credentials out of the source tree, so they are no longer in
- *      version control, code review, or copy-paste range.
- *   2. Makes the secret **optional**. `oauthClientFields()` omits
- *      `client_secret` entirely when none is configured — so the day the
- *      backend converts this to a public client, the fix is to stop setting
- *      the variable. No code change, no redeploy of logic.
+ * Values sent on the request still take precedence server-side, so the env vars
+ * remain a working override for any environment without `PASSPORT_{USER,ADMIN}_CLIENT_*`
+ * configured. Set BOTH or NEITHER — an id without a secret fails the grant.
  *
- * Today the secret is still required: `RequiresUserPassportClient::passportRules()`
- * validates `client_secret` as `required|string` and `passportTokenRequest()`
- * forwards it to Passport's `oauth/token`. Omitting it now returns 422.
- *
- * The real fix is backend-owned — convert the Passport client to a public
- * client and adopt Authorization Code + PKCE, or proxy the token exchange
- * through the backend. See BACKEND_INTEGRATION_REQUESTS.md.
- *
- * The secrets that were previously hardcoded here must be treated as
- * compromised and rotated by the project owner.
+ * The previously hardcoded secrets shipped in public bundles and must still be
+ * rotated by the project owner.
  */
 
 const env: ImportMetaEnv = import.meta.env ?? ({} as ImportMetaEnv);
 
 export const OAUTH_CLIENT_ID: string = env.VITE_OAUTH_CLIENT_ID ?? '';
 
-/** Empty once the backend accepts a public client. */
 const OAUTH_CLIENT_SECRET: string = env.VITE_OAUTH_CLIENT_SECRET ?? '';
 
 /**
@@ -42,10 +29,14 @@ const OAUTH_CLIENT_SECRET: string = env.VITE_OAUTH_CLIENT_SECRET ?? '';
  * form, which is what a missing client id looks like from the user's side.
  */
 export const assertAuthConfig = (): void => {
-  if (!OAUTH_CLIENT_ID) {
-    console.error(
-      '[auth] VITE_OAUTH_CLIENT_ID is not set. Sign-in and registration will fail. ' +
-      'Copy .env.example to .env and provide the admin OAuth client id.'
+  // Not an error: the server supplies the client from
+  // `config('passport.clients.admins')`, so omitting both is intended. Only
+  // the half-configured case is worth flagging — an id without its secret
+  // reaches Passport as an incomplete client and fails the grant.
+  if (OAUTH_CLIENT_ID && !OAUTH_CLIENT_SECRET) {
+    console.warn(
+      '[auth] VITE_OAUTH_CLIENT_ID is set without VITE_OAUTH_CLIENT_SECRET. ' +
+      'Send both, or neither and let the server supply the client from config.'
     );
   }
 };
@@ -57,7 +48,11 @@ export const assertAuthConfig = (): void => {
  * deployment sends a PKCE-compatible payload without touching this code.
  */
 export const oauthClientFields = (): Record<string, string> => {
-  const fields: Record<string, string> = { client_id: OAUTH_CLIENT_ID };
+  const fields: Record<string, string> = {};
+  // Omitted entirely when unset. An empty string is not the same as absent:
+  // the server falls back to config only on a falsy value, and an empty one
+  // would still reach Passport as an incomplete client.
+  if (OAUTH_CLIENT_ID) fields.client_id = OAUTH_CLIENT_ID;
   if (OAUTH_CLIENT_SECRET) fields.client_secret = OAUTH_CLIENT_SECRET;
   return fields;
 };
