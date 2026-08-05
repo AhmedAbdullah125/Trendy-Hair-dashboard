@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 // Type definitions based on API response structure
@@ -159,7 +159,7 @@ export const useGetAdminOrders = ({
             if (to) params.to = to;
             if (search) params.search = search;
 
-            const response = await axios.get<AdminOrdersResponse>(
+            const response = await api.get<AdminOrdersResponse>(
                 `${API_BASE_URL}/v1/admin/orders`,
                 {
                     params,

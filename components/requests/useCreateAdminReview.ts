@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface CreateAdminReviewParams {
@@ -42,7 +42,7 @@ export const useCreateAdminReview = () => {
                 formData.append('image', data.image);
             }
 
-            const response = await axios.post<CreateAdminReviewResponse>(
+            const response = await api.post<CreateAdminReviewResponse>(
                 `${API_BASE_URL}/v1/admin/review`,
                 formData,
                 {

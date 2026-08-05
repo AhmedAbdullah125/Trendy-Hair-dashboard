@@ -5,6 +5,7 @@ import { useCreateAdminReview, CreateAdminReviewParams } from '../requests/useCr
 import { useUpdateAdminReview, UpdateAdminReviewParams } from '../requests/useUpdateAdminReview';
 import { useDeleteAdminReview } from '../requests/useDeleteAdminReview';
 import { toast } from 'sonner';
+import { onImageError, resolveImageUrl } from '../../lib/imageUrl';
 
 const AdminReviews: React.FC = () => {
   const [pageNumber, setPageNumber] = useState(1);
@@ -224,7 +225,7 @@ const AdminReviews: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="w-16 h-16 rounded-lg overflow-hidden border border-app-card bg-white relative group">
                           {review.image ? (
-                            <img src={review.image} alt={review.title_ar} className="w-full h-full object-cover" />
+                            <img src={resolveImageUrl(review.image)} onError={onImageError} alt={review.title_ar} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-app-bg">
                               <Video size={24} className="text-app-textSec" />
@@ -259,7 +260,7 @@ const AdminReviews: React.FC = () => {
                             <Edit3 size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(review.id, review.title_ar)}
+                            onClick={() => handleDelete(review.id, review.title_ar)} aria-label="حذف"
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                           >
                             <Trash2 size={18} />

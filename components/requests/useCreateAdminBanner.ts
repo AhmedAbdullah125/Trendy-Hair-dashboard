@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface CreateAdminBannerParams {
@@ -39,7 +39,7 @@ export const useCreateAdminBanner = () => {
             formData.append('position', data.position.toString());
             formData.append('image', data.image);
 
-            const response = await axios.post<CreateAdminBannerResponse>(
+            const response = await api.post<CreateAdminBannerResponse>(
                 `${API_BASE_URL}/v1/admin/banner`,
                 formData,
                 {

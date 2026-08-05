@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface UpdateCompetitionQuestionParams {
@@ -28,7 +28,7 @@ export const useUpdateCompetitionQuestion = () => {
             formData.append('status', data.status);
             formData.append('sort_by', data.sort_by.toString());
 
-            const response = await axios.post<UpdateCompetitionQuestionResponse>(
+            const response = await api.post<UpdateCompetitionQuestionResponse>(
                 `${API_BASE_URL}/v1/admin/competition-questions/${data.id}?_method=PUT`,
                 formData,
                 { headers: { 'Authorization': `Bearer ${adminToken}` } }

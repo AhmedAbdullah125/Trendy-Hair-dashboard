@@ -7,6 +7,7 @@ import {
   LogOut, Menu, X, Bell, Search, ShieldCheck, Layers, Tag, Grid, Star, Trash2
 } from 'lucide-react';
 import { useAdminTokenRefresh } from '../../hooks/useAdminTokenRefresh';
+import { PERMISSIONS, useAdminPermissions } from '../../lib/permissions';
 import { toast } from 'sonner';
 
 const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout }) => {
@@ -17,11 +18,16 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
   // Auto-refresh admin token
   useAdminTokenRefresh();
 
-  const menuItems = [
+  const { can } = useAdminPermissions();
+
+  // `disabled` is optional and currently unused, but the rendering below still
+  // honours it — keep it on the type so re-adding a not-ready screen is a
+  // one-line change rather than a type error.
+  const menuItems: Array<{ icon: React.ReactNode; label: string; path: string; disabled?: boolean; permission?: string }> = [
     { icon: <ShoppingBag size={20} />, label: 'الطلبات', path: '/admin/orders' },
-    { icon: <LayoutDashboard size={20} />, label: 'التحليلات', path: '/admin/dashboard' },
+    { icon: <LayoutDashboard size={20} />, label: 'التحليلات', path: '/admin/dashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
     { icon: <Package size={20} />, label: 'المنتجات', path: '/admin/products' },
-    { icon: <Grid size={20} />, label: 'الأقسام', path: '/admin/categories' },
+    { icon: <Grid size={20} />, label: 'الأقسام', path: '/admin/categories', permission: PERMISSIONS.VIEW_CATEGORIES },
     { icon: <Tag size={20} />, label: 'العلامات التجارية', path: '/admin/brands' },
     //banners
     { icon: <Tag size={20} />, label: 'البنرات', path: '/admin/banners' },
@@ -32,13 +38,18 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
     { icon: <Layers size={20} />, label: 'المحافظات والمدن', path: '/admin/locations' },
     // { icon: <Layers size={20} />, label: 'ودجات الرئيسية', path: '/admin/widgets' },
     { icon: <Gamepad2 size={20} />, label: 'مسابقة تريندي', path: '/admin/game' },
+    { icon: <Wallet size={20} />, label: 'المحفظة والنقاط', path: '/admin/wallets' },
+    { icon: <Settings size={20} />, label: 'الإعدادات والمحتوى', path: '/admin/content' },
     // Hidden for now — the screens behind these are not ready yet.
     // { icon: <FileBarChart size={20} />, label: 'التقارير', path: '/admin/reports', disabled: true },
-    { icon: <Wallet size={20} />, label: 'المحفظة والنقاط', path: '/admin/wallets', disabled: true },
     // { icon: <Settings size={20} />, label: 'الإعدادات', path: '/admin/settings', disabled: true },
   ];
 
 
+
+  // Entries without a `permission` stay visible: the backend defines no
+  // permission for them, so gating would hide working screens from everyone.
+  const visibleMenuItems = menuItems.filter((item) => !item.permission || can(item.permission));
 
   return (
     <div className="flex h-screen bg-[#F7F4EE] font-alexandria overflow-hidden" dir="rtl">
@@ -53,16 +64,16 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
           <Link to="/admin/dashboard" className={`text-xl font-bold text-app-goldDark truncate transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>
             لوحة الإدارة
           </Link>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-app-textSec hover:text-app-gold hidden md:block">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} aria-label={isSidebarOpen ? "طي القائمة" : "توسيع القائمة"} aria-expanded={isSidebarOpen} className="text-app-textSec hover:text-app-gold hidden md:block">
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-app-textSec md:hidden">
+          <button onClick={() => setIsSidebarOpen(false)} aria-label="إغلاق القائمة" className="text-app-textSec md:hidden">
             <X size={20} />
           </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto no-scrollbar py-4 space-y-1 px-3">
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -112,7 +123,7 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
         {/* Top Header */}
         <header className="bg-white h-20 shadow-sm border-b border-app-card/30 flex items-center justify-between px-6 z-10">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-app-text">
+            <button onClick={() => setIsSidebarOpen(true)} aria-label="فتح القائمة" className="md:hidden text-app-text">
               <Menu size={24} />
             </button>
             <h2 className="text-lg font-bold text-app-text">

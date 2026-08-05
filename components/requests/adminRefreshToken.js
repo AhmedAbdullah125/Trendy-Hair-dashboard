@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
+import { appendOAuthClient } from '@/lib/authConfig';
 
 export async function adminRefreshToken(setLoading, lang) {
     setLoading(true);
@@ -10,8 +11,7 @@ export async function adminRefreshToken(setLoading, lang) {
 
     formData.append('grant_type', "refresh_token");
     formData.append('refresh_token', refresh_token);
-    formData.append('client_id', "a10c4102-9d0e-40ff-a301-8de8881779ac");
-    formData.append('client_secret', "SG1aNaO9BTemG8rPWHEYAxydiYQTcE1fZWBeSu5N");
+    appendOAuthClient(formData);
     const headers = { 'lang': lang };
 
     try {

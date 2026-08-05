@@ -1,12 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
-export type OrderStatusType = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'completed';
+import type { OrderStatusKey } from '@/lib/orderStatus';
+
+/**
+ * Kept as an alias for the canonical key type in `lib/orderStatus`.
+ *
+ * The local union used to omit `refunded`, which the backend's
+ * `ChangeStatusOrderRequest` accepts — so a refund could never be recorded
+ * from the dashboard.
+ */
+export type OrderStatusType = OrderStatusKey;
 
 interface ChangeOrderStatusParams {
     orderId: number;
-    status: OrderStatusType;
+    status: OrderStatusKey;
 }
 
 interface ChangeOrderStatusResponse {
@@ -30,7 +39,7 @@ export const useChangeOrderStatus = () => {
             const formData = new FormData();
             formData.append('status', status);
 
-            const response = await axios.post<ChangeOrderStatusResponse>(
+            const response = await api.post<ChangeOrderStatusResponse>(
                 `${API_BASE_URL}/v1/admin/orders/change-status/${orderId}`,
                 formData,
                 {

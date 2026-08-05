@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface WalletTransaction {
@@ -51,7 +51,7 @@ export const useGetWalletTransactions = ({
         queryKey: ['wallet-transactions', pageSize, pageNumber, search, direction],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
-            const response = await axios.get<WalletTransactionsResponse>(
+            const response = await api.get<WalletTransactionsResponse>(
                 `${API_BASE_URL}/v1/admin/wallet-transactions`,
                 {
                     params: {

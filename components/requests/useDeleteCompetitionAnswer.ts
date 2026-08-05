@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 interface DeleteCompetitionAnswerResponse {
@@ -14,7 +14,7 @@ export const useDeleteCompetitionAnswer = () => {
     return useMutation<DeleteCompetitionAnswerResponse, Error, number>({
         mutationFn: async (answerId) => {
             const adminToken = localStorage.getItem('admin_token');
-            const response = await axios.delete<DeleteCompetitionAnswerResponse>(
+            const response = await api.delete<DeleteCompetitionAnswerResponse>(
                 `${API_BASE_URL}/v1/admin/competition-answers/${answerId}`,
                 { headers: { 'Authorization': `Bearer ${adminToken}` } }
             );

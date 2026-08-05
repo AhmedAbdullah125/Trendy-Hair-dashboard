@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 interface MarkOrderPaidResponse {
@@ -29,7 +29,7 @@ export const useMarkOrderPaid = () => {
         mutationFn: async (orderId: number) => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const response = await axios.post<MarkOrderPaidResponse>(
+            const response = await api.post<MarkOrderPaidResponse>(
                 `${API_BASE_URL}/v1/admin/orders/mark-paid/${orderId}`,
                 {},
                 { headers: { Authorization: `Bearer ${adminToken}` } }

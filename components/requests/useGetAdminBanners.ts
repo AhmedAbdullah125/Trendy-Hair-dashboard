@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface Banner {
@@ -51,7 +51,7 @@ export const useGetAdminBanners = ({
                 page_number: pageNumber,
             };
 
-            const response = await axios.get<BannersResponse>(
+            const response = await api.get<BannersResponse>(
                 `${API_BASE_URL}/v1/admin/banner`,
                 {
                     params,

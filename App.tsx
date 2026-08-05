@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { clearAdminSession } from './lib/axiosInstance';
+import { PERMISSIONS } from './lib/permissions';
+import RequirePermission from './components/admin/RequirePermission';
 
 // Admin Imports
 import AdminLayout from './components/admin/AdminLayout';
@@ -42,9 +45,13 @@ const AppContent: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout }) 
           </ProtectedAdminRoute>
         }>
           <Route index element={<Navigate to="/admin/orders" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="dashboard" element={
+            <RequirePermission anyOf={[PERMISSIONS.VIEW_DASHBOARD]}><AdminDashboard /></RequirePermission>
+          } />
           <Route path="widgets" element={<AdminWidgets />} />
-          <Route path="categories" element={<AdminCategories />} />
+          <Route path="categories" element={
+            <RequirePermission anyOf={[PERMISSIONS.VIEW_CATEGORIES]}><AdminCategories /></RequirePermission>
+          } />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="products" element={<AdminProducts />} />
@@ -82,11 +89,7 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
 
 const App: React.FC = () => {
   const handleAdminLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_refresh_token');
-    localStorage.removeItem('admin_user');
-    localStorage.removeItem('admin_permissions');
-    // Force reload to reset state and redirect to login
+    clearAdminSession();
     window.location.hash = '/admin/login';
   };
 

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -10,7 +10,7 @@ export const useDeleteAdminCity = () => {
         mutationFn: async (cityId: number) => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const response = await axios.delete(
+            const response = await api.delete(
                 `${API_BASE_URL}/v1/admin/city/${cityId}`,
                 {
                     headers: {

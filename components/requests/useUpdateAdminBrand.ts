@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -30,8 +30,11 @@ export const useUpdateAdminBrand = () => {
             if (data.position !== undefined) formData.append('position', data.position.toString());
             if (data.image) formData.append('image', data.image);
             formData.append('is_active', (data.is_active ?? 1).toString());
+            // PHP only parses multipart bodies on POST, so a real PUT arrives
+            // empty and fails `translations` validation. Spoof the method.
+            formData.append('_method', 'PUT');
 
-            const response = await axios.put(
+            const response = await api.post(
                 `${API_BASE_URL}/v1/admin/brand/${data.id}`,
                 formData,
                 {

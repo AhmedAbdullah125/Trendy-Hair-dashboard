@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface UpdateAdminUserParams {
@@ -43,7 +43,11 @@ export const useUpdateAdminUser = () => {
                 formData.append('photo', data.photo);
             }
 
-            const response = await axios.put<UpdateAdminUserResponse>(
+            // PHP only parses multipart bodies on POST, so a real PUT arrives
+            // empty and fails `name`/`email`/`phone` validation. Spoof the method.
+            formData.append('_method', 'PUT');
+
+            const response = await api.post<UpdateAdminUserResponse>(
                 `${API_BASE_URL}/v1/admin/users/${data.id}`,
                 formData,
                 {

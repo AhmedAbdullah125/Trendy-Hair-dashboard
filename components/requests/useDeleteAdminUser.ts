@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 interface DeleteAdminUserResponse {
@@ -19,7 +19,7 @@ export const useDeleteAdminUser = () => {
         mutationFn: async (userId: number) => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const response = await axios.delete<DeleteAdminUserResponse>(
+            const response = await api.delete<DeleteAdminUserResponse>(
                 `${API_BASE_URL}/v1/admin/users/${userId}`,
                 {
                     headers: {

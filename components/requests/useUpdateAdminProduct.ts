@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -19,6 +19,14 @@ interface UpdateProductData {
     category_id?: number;
     is_recently?: number;
     images?: File[];
+    /**
+     * IDs of existing `product_images` rows to delete.
+     *
+     * `ProductEloquent::update()` reads this as a comma-separated string and
+     * does `ProductImage::whereIn('id', explode(',', …))->delete()`. There is
+     * no separate image endpoint — removal rides along with the product save.
+     */
+    removed_image_ids?: number[];
 }
 
 /**
@@ -50,12 +58,19 @@ export const useUpdateAdminProduct = () => {
                     formData.append('images[]', element); //file 
                 }
             }
+            // Backend expects a single comma-separated field, not an array.
+            if (data.removed_image_ids && data.removed_image_ids.length > 0) {
+                formData.append('removed_images', data.removed_image_ids.join(','));
+            }
             if (data.position !== undefined) formData.append('position', data.position.toString());
 
             formData.append('is_active', (data.is_active ?? 1).toString());
             formData.append('is_recently', (data.is_recently ?? 1).toString());
+            // PHP only parses multipart bodies on POST, so a real PUT arrives
+            // empty and fails `price`/`brand_id`/`category_id`/`translations`.
+            formData.append('_method', 'PUT');
 
-            const response = await axios.put(
+            const response = await api.post(
                 `${API_BASE_URL}/v1/admin/products/${data.id}`,
                 formData,
                 {

@@ -9,7 +9,7 @@ import { useUpdateAdminProduct } from '../requests/useUpdateAdminProduct';
 import { useGetAdminCategories } from '../requests/useGetAdminCategories';
 import { useGetAdminBrands } from '../requests/useGetAdminBrands';
 
-import { useDeleteAdminProductImage } from '../requests/useDeleteAdminProductImage';
+import { onImageError, resolveImageUrl } from '../../lib/imageUrl';
 
 interface ProductFormData {
   id?: number;
@@ -29,6 +29,8 @@ interface ProductFormData {
   imageUrl?: string;
   images?: File[];
   existingImages?: { id: number; url: string }[];
+  /** Existing image rows the admin removed; applied on save via `removed_images`. */
+  removedImageIds?: number[];
 }
 
 /**
@@ -92,7 +94,6 @@ const AdminProducts: React.FC = () => {
   const deleteMutation = useDeleteAdminProduct();
   const addMutation = useAddAdminProduct();
   const updateMutation = useUpdateAdminProduct();
-  const deleteImageMutation = useDeleteAdminProductImage();
 
   const products = data?.items?.data || [];
   const pagination = data?.items?.pagination || {
@@ -154,7 +155,8 @@ const AdminProducts: React.FC = () => {
       is_active: true,
       is_recently: true,
       images: [],
-      existingImages: []
+      existingImages: [],
+      removedImageIds: []
     });
     setIsModalOpen(true);
   };
@@ -176,6 +178,7 @@ const AdminProducts: React.FC = () => {
       is_recently: product.is_recently,
       imageUrl: product.main_image,
       images: [],
+      removedImageIds: [],
       existingImages: product.images?.map((img: any) => ({
         id: img.id,
         url: img.image || img.url || img.path || img.image_url
@@ -208,7 +211,8 @@ const AdminProducts: React.FC = () => {
       await updateMutation.mutateAsync({
         id: editingProduct.id,
         ...productData,
-        images: editingProduct.images
+        images: editingProduct.images,
+        removed_image_ids: editingProduct.removedImageIds
       });
     } else {
       // Add new product
@@ -315,7 +319,7 @@ const AdminProducts: React.FC = () => {
                   <tr key={p.id} className="hover:bg-app-bg/50 transition-colors">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg overflow-hidden border border-app-card">
-                        <img src={p.main_image} className="w-full h-full object-cover" alt="" />
+                        <img src={resolveImageUrl(p.main_image)} onError={onImageError} className="w-full h-full object-cover" alt="" />
                       </div>
                       <div>
                         <div className="font-bold text-app-text">{p.name_ar}</div>
@@ -347,14 +351,14 @@ const AdminProducts: React.FC = () => {
                       </button>
                       <button
                         disabled
-                        onClick={() => openEditModal(p)}
+                        onClick={() => openEditModal(p)} aria-label="تعديل"
                         className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"
                       >
                         <Edit3 size={18} />
                       </button>
                       <button
                         disabled
-                        onClick={() => handleDelete(p.id)}
+                        onClick={() => handleDelete(p.id)} aria-label="حذف"
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"
                       >
                         <Trash2 size={18} />
@@ -593,11 +597,26 @@ const AdminProducts: React.FC = () => {
                         {editingProduct.existingImages.map((img) => (
                           <div key={img.id} className="relative w-24 h-24 border border-app-card rounded-lg overflow-hidden group">
                             <img
-                              src={img.url}
+                              src={resolveImageUrl(img.url)}
+                              onError={onImageError}
                               alt="Product"
                               className="w-full h-full object-cover"
                             />
-
+                            {/* Removal is applied on save via `removed_images`;
+                                there is no standalone delete-image endpoint. */}
+                            <button
+                              type="button"
+                              aria-label="حذف الصورة"
+                              title="حذف الصورة"
+                              onClick={() => setEditingProduct((prev) => prev && ({
+                                ...prev,
+                                existingImages: (prev.existingImages || []).filter((i) => i.id !== img.id),
+                                removedImageIds: [...(prev.removedImageIds || []), img.id],
+                              }))}
+                              className="absolute top-1 left-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                            >
+                              <Trash2 size={12} />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -743,7 +762,7 @@ const AdminProducts: React.FC = () => {
             <div className="p-6 overflow-y-auto space-y-6">
               <div className="flex gap-4">
                 <div className="w-28 h-28 rounded-xl overflow-hidden border border-app-card shrink-0">
-                  <img src={viewingProduct.main_image} className="w-full h-full object-cover" alt="" />
+                  <img src={resolveImageUrl(viewingProduct.main_image)} onError={onImageError} className="w-full h-full object-cover" alt="" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-app-text text-lg break-words">{viewingProduct.name_ar}</p>

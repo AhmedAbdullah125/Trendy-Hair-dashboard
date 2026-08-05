@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -28,7 +28,7 @@ export const useUpdateAdminGovernorate = () => {
             // Adding _method='PUT' since data is submitted as FormData and typical Laravel backends require this
             formData.append('_method', 'PUT');
 
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_BASE_URL}/v1/admin/governorate/${data.id}`,
                 formData,
                 {

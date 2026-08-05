@@ -123,7 +123,8 @@ const AdminEmployees: React.FC = () => {
                         <p className="mt-4 text-app-textSec">جاري تحميل الأدوار...</p>
                     </div>
                 ) : (
-                    <table className="w-full text-right">
+                    <div className="overflow-x-auto">
+<table className="w-full text-right">
                         <thead className="bg-app-bg text-app-textSec text-xs font-bold uppercase">
                             <tr>
                                 <th className="px-6 py-4">ID</th>
@@ -147,7 +148,7 @@ const AdminEmployees: React.FC = () => {
                                         </button>
                                         {/* Delete button could go here */}
                                         <button
-                                            onClick={() => handleDelete(role.id)}
+                                            onClick={() => handleDelete(role.id)} aria-label="حذف"
                                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                                         >
                                             <Trash2 size={18} />
@@ -157,6 +158,7 @@ const AdminEmployees: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
+</div>
                 )}
             </div>
 

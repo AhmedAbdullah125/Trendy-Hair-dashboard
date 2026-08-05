@@ -15,6 +15,12 @@ import { useGetAdminSettings, useUpdateAdminSettings, AdminSettings } from '../r
  *  - a banner "slider" placeholder whose upload boxes had no handlers (banners
  *    are managed for real on the Banners screen, linked below);
  *  - four social-link inputs with no state, no save and no backend route.
+ *
+ * `points_per_dinar` and `min_wallet_redemption` moved to the wallets screen,
+ * which is the one reachable from the sidebar. They must stay out of `form`
+ * as well as out of the markup: handleSave sends every key it holds, blanking
+ * the ones with no input, so merely hiding the fields would have cleared the
+ * rate on the next save.
  */
 
 type EditableKeys =
@@ -25,9 +31,7 @@ type EditableKeys =
   | 'competition_interval_minutes'
   | 'competition_question_time'
   | 'competition_block_minutes'
-  | 'game_balance_cap'
-  | 'points_per_dinar'
-  | 'min_wallet_redemption';
+  | 'game_balance_cap';
 
 const EMPTY: Record<EditableKeys, string> = {
   tech_booking_url: '',
@@ -38,8 +42,6 @@ const EMPTY: Record<EditableKeys, string> = {
   competition_question_time: '',
   competition_block_minutes: '',
   game_balance_cap: '',
-  points_per_dinar: '',
-  min_wallet_redemption: '',
 };
 
 const AdminContent: React.FC = () => {
@@ -62,8 +64,6 @@ const AdminContent: React.FC = () => {
       competition_question_time: settings.competition_question_time ?? '',
       competition_block_minutes: settings.competition_block_minutes ?? '',
       game_balance_cap: settings.game_balance_cap ?? '',
-      points_per_dinar: settings.points_per_dinar ?? '',
-      min_wallet_redemption: settings.min_wallet_redemption ?? '',
     });
   }, [data]);
 
@@ -237,36 +237,18 @@ const AdminContent: React.FC = () => {
             </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-app-text mb-2">عدد النقاط لكل دينار</label>
-            <input
-              type="number"
-              min={1}
-              className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
-              value={form.points_per_dinar}
-              onChange={set('points_per_dinar')}
-            />
-            <p className="text-[11px] text-app-textSec mt-1">
-              يحدد قيمة النقطة عند الخصم. تغييره يغيّر قيمة كل الأرصدة الحالية.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold text-app-text mb-2">أقل رصيد قابل للاستخدام (د.ك)</label>
-            <input
-              type="number"
-              min={0}
-              step="0.001"
-              placeholder="0 = بدون حد أدنى"
-              className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
-              value={form.min_wallet_redemption}
-              onChange={set('min_wallet_redemption')}
-            />
-            <p className="text-[11px] text-app-textSec mt-1">
-              لا يظهر خيار استخدام النقاط في السلة قبل بلوغ هذه القيمة.
-            </p>
-          </div>
         </div>
+
+        <p className="text-[11px] text-app-textSec mt-4 border-t border-app-card/30 pt-3">
+          قيمة النقطة (عدد النقاط لكل دينار) وأقل رصيد قابل للاستخدام انتقلا إلى شاشة{' '}
+          <button
+            onClick={() => navigate('/admin/wallets')}
+            className="font-bold text-app-gold hover:underline"
+          >
+            المحفظة والنقاط
+          </button>
+          .
+        </p>
       </div>
 
       {/* Banners live on their own screen */}

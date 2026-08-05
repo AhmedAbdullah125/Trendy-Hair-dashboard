@@ -121,7 +121,8 @@ const AdminWidgets: React.FC = () => {
       )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-app-card/30 overflow-hidden">
-        <table className="w-full text-right">
+        <div className="overflow-x-auto">
+<table className="w-full text-right">
           <thead className="bg-app-bg text-app-textSec text-xs font-bold uppercase">
             <tr>
               <th className="px-6 py-4">#</th>
@@ -145,8 +146,8 @@ const AdminWidgets: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 font-bold">{widget.displayOrder}</td>
                 <td className="px-6 py-4 flex gap-2">
-                  <button onClick={() => openEditModal(widget)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit3 size={18} /></button>
-                  <button onClick={() => handleDelete(widget.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                  <button onClick={() => openEditModal(widget)} aria-label="تعديل" className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit3 size={18} /></button>
+                  <button onClick={() => handleDelete(widget.id)} aria-label="حذف" className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                 </td>
               </tr>
             ))}
@@ -157,6 +158,7 @@ const AdminWidgets: React.FC = () => {
             )}
           </tbody>
         </table>
+</div>
       </div>
 
       {isModalOpen && editingWidget && (

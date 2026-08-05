@@ -5,6 +5,7 @@ import { useGetAdminBrands } from '../requests/useGetAdminBrands';
 import { useAddAdminBrand } from '../requests/useAddAdminBrand';
 import { useUpdateAdminBrand } from '../requests/useUpdateAdminBrand';
 import { useDeleteAdminBrand } from '../requests/useDeleteAdminBrand';
+import { onImageError, resolveImageUrl } from '../../lib/imageUrl';
 
 interface BrandFormData {
   id?: number;
@@ -177,7 +178,7 @@ const AdminBrands: React.FC = () => {
                   <tr key={brand.id} className="hover:bg-app-bg/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-app-card bg-white">
-                        <img src={brand.image} alt={brand.name_ar} className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(brand.image)} onError={onImageError} alt={brand.name_ar} className="w-full h-full object-cover" />
                       </div>
                     </td>
                     <td className="px-6 py-4 font-bold text-app-text">{brand.name_ar}</td>
@@ -189,8 +190,8 @@ const AdminBrands: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 font-bold">{brand.position}</td>
                     <td className="px-6 py-4 flex gap-2">
-                      <button disabled onClick={() => openEditModal(brand)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"><Edit3 size={18} /></button>
-                      <button disabled onClick={() => handleDelete(brand.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"><Trash2 size={18} /></button>
+                      <button disabled onClick={() => openEditModal(brand)} aria-label="تعديل" className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"><Edit3 size={18} /></button>
+                      <button disabled onClick={() => handleDelete(brand.id)} aria-label="حذف" className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"><Trash2 size={18} /></button>
                     </td>
                   </tr>
                 ))}

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 // Response types based on actual API structure
@@ -72,7 +72,7 @@ export const useGetAdminProducts = (
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const response = await axios.get<AdminProductsResponse>(
+            const response = await api.get<AdminProductsResponse>(
                 `${API_BASE_URL}/v1/admin/products`,
                 {
                     params: {

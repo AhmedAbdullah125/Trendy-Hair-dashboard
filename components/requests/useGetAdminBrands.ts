@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 /**
@@ -11,7 +11,7 @@ export const useGetAdminBrands = (pageSize = 10, pageNumber = 1, lang = 'ar') =>
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const response = await axios.get(
+            const response = await api.get(
                 `${API_BASE_URL}/v1/admin/brand`,
                 {
                     params: {

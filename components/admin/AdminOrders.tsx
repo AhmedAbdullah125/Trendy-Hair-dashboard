@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
 import { useGetAdminOrders, Order, OrderStatus, PaymentStatus } from '../requests/useGetAdminOrders';
-import { useChangeOrderStatus, OrderStatusType } from '../requests/useChangeOrderStatus';
+import { useChangeOrderStatus } from '../requests/useChangeOrderStatus';
+import { ORDER_STATUS_OPTIONS, statusBadge, toOrderStatusKey, type OrderStatusKey } from '../../lib/orderStatus';
 import { useMarkOrderPaid } from '../requests/useMarkOrderPaid';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ import { toast } from 'sonner';
 const AdminOrders: React.FC = () => {
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<OrderStatusType>('pending');
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatusKey>('pending');
   const [showMarkPaidConfirm, setShowMarkPaidConfirm] = useState(false);
 
   // Filter and pagination state
@@ -53,19 +54,10 @@ const AdminOrders: React.FC = () => {
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
 
-    // Convert Arabic status back to English key for state management (select input)
-    const arToEnMap: Record<string, OrderStatusType> = {
-      'قيد الانتظار': 'pending',
-      'مؤكد': 'confirmed',
-      'قيد التجهيز': 'processing',
-      'تم الشحن': 'shipped',
-      'تم التوصيل': 'delivered',
-      'مكتمل': 'completed',
-      'ملغي': 'cancelled',
-    };
-
-    const mappedStatus = arToEnMap[order.status] || (order.status as OrderStatusType);
-    setSelectedStatus(mappedStatus);
+    // The API sends a localised label, not the enum. Resolve it to a key; an
+    // unresolved value must never reach `change-status`, which would reject
+    // it, so fall back to the current selection rather than posting garbage.
+    setSelectedStatus(toOrderStatusKey(order.status) ?? 'pending');
     setView('detail');
   };
 
@@ -208,37 +200,7 @@ const AdminOrders: React.FC = () => {
     setPageNumber(1);
   };
 
-  // Status mapping from English and Arabic to localized labels and colors
-  const getStatusInfo = (status: string) => {
-    const statusMap: Record<string, { label: string; colors: string }> = {
-      // Order Statuses (English keys)
-      'pending': { label: 'قيد الانتظار', colors: 'bg-yellow-100 text-yellow-700' },
-      'confirmed': { label: 'مؤكد', colors: 'bg-cyan-100 text-cyan-600' },
-      'processing': { label: 'قيد التجهيز', colors: 'bg-blue-100 text-blue-600' },
-      'shipped': { label: 'تم الشحن', colors: 'bg-purple-100 text-purple-600' },
-      'delivered': { label: 'تم التوصيل', colors: 'bg-emerald-100 text-emerald-600' },
-      'completed': { label: 'مكتمل', colors: 'bg-green-100 text-green-600' },
-      'cancelled': { label: 'ملغي', colors: 'bg-red-100 text-red-600' },
-
-      // Order Statuses (Arabic response from API)
-      'قيد الانتظار': { label: 'قيد الانتظار', colors: 'bg-yellow-100 text-yellow-700' },
-      'مؤكد': { label: 'مؤكد', colors: 'bg-cyan-100 text-cyan-600' },
-      'قيد التجهيز': { label: 'قيد التجهيز', colors: 'bg-blue-100 text-blue-600' },
-      'تم الشحن': { label: 'تم الشحن', colors: 'bg-purple-100 text-purple-600' },
-      'تم التوصيل': { label: 'تم التوصيل', colors: 'bg-emerald-100 text-emerald-600' },
-      'مكتمل': { label: 'مكتمل', colors: 'bg-green-100 text-green-600' },
-      'ملغي': { label: 'ملغي', colors: 'bg-red-100 text-red-600' },
-
-      // Payment Statuses (Arabic response from API)
-      'مدفوع': { label: 'مدفوع', colors: 'bg-emerald-100 text-emerald-600' },
-      'فشل الدفع': { label: 'فشل الدفع', colors: 'bg-red-100 text-red-600' },
-      'فشل': { label: 'فشل', colors: 'bg-red-100 text-red-600' },
-      'قيد الدفع': { label: 'قيد الدفع', colors: 'bg-yellow-100 text-yellow-700' },
-      'cash': { label: 'الدفع عند الاستلام', colors: 'bg-blue-100 text-blue-700' },
-      'الدفع عند الاستلام': { label: 'الدفع عند الاستلام', colors: 'bg-blue-100 text-blue-700' },
-    };
-    return statusMap[status] || { label: status, colors: 'bg-gray-100 text-gray-600' };
-  };
+  const getStatusInfo = statusBadge;
 
   const StatusBadge = ({ status }: { status: string }) => {
     const { label, colors } = getStatusInfo(status);
@@ -525,15 +487,11 @@ const AdminOrders: React.FC = () => {
               <select
                 className="w-full p-3 bg-app-bg border border-app-card rounded-xl font-bold text-app-text outline-none focus:border-app-gold"
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as OrderStatusType)}
+                onChange={(e) => setSelectedStatus(e.target.value as OrderStatusKey)}
               >
-                <option value="pending">قيد الانتظار</option>
-                <option value="confirmed">مؤكد</option>
-                <option value="processing">قيد التجهيز</option>
-                <option value="shipped">تم الشحن</option>
-                <option value="delivered">تم التوصيل</option>
-                <option value="completed">مكتمل</option>
-                <option value="cancelled">ملغي</option>
+                {ORDER_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
 
               {selectedOrder.notes && (
@@ -643,13 +601,9 @@ const AdminOrders: React.FC = () => {
               onChange={(e) => handleStatusChange(e.target.value)}
             >
               <option value="">كل حالات التوصيل</option>
-              <option value="pending">قيد الانتظار</option>
-              <option value="confirmed">مؤكد</option>
-              <option value="processing">قيد التجهيز</option>
-              <option value="shipped">تم الشحن</option>
-              <option value="delivered">تم التوصيل</option>
-              <option value="completed">مكتمل</option>
-              <option value="cancelled">ملغي</option>
+              {ORDER_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
             </select>
             {status && (
               <button

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Phone, Loader2 } from 'lucide-react';
 import { adminLoginRequest } from '../requests/adminLoginRequest';
+import { resetUnauthorizedGuard, takeAdminRedirect } from '../../lib/axiosInstance';
 
 const AdminLogin: React.FC = () => {
     const navigate = useNavigate();
@@ -47,7 +48,10 @@ const AdminLogin: React.FC = () => {
         const result = await adminLoginRequest(formData, setLoading, 'ar');
 
         if (result.success) {
-            navigate('/admin/orders');
+            // Re-arm the 401 guard so a later expiry redirects again.
+            resetUnauthorizedGuard();
+            // Return the admin to whatever screen the expiry interrupted.
+            navigate(takeAdminRedirect() ?? '/admin/orders');
         }
     };
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -37,7 +37,7 @@ export const useGetAdminSettings = () =>
     useQuery<SettingsResponse>({
         queryKey: ['admin-settings'],
         queryFn: async () => {
-            const response = await axios.get<SettingsResponse>(
+            const response = await api.get<SettingsResponse>(
                 `${API_BASE_URL}/v1/admin/settings`,
                 { headers: authHeaders() }
             );
@@ -58,7 +58,7 @@ export const useUpdateAdminSettings = () => {
 
     return useMutation({
         mutationFn: async (settings: Partial<AdminSettings>) => {
-            const response = await axios.put<SettingsResponse>(
+            const response = await api.put<SettingsResponse>(
                 `${API_BASE_URL}/v1/admin/settings`,
                 { settings },
                 { headers: authHeaders() }

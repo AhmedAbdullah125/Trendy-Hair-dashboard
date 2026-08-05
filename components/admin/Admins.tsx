@@ -6,6 +6,7 @@ import { useDeleteAdmin } from '../requests/useDeleteAdmin';
 import { useGetAdminRoles } from '../requests/useGetAdminRoles';
 import { useGetAdmin } from '../requests/useGetAdmin';
 import { Plus, Edit3, Trash2, X, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { onImageError, resolveImageUrl } from '../../lib/imageUrl';
 
 interface Admin {
     id: number;
@@ -156,7 +157,8 @@ const Admins: React.FC = () => {
                         <p className="mt-4 text-app-textSec">جاري تحميل المشرفين...</p>
                     </div>
                 ) : (
-                    <table className="w-full text-right">
+                    <div className="overflow-x-auto">
+<table className="w-full text-right">
                         <thead className="bg-app-bg text-app-textSec text-xs font-bold uppercase">
                             <tr>
                                 <th className="px-6 py-4">الاسم</th>
@@ -172,7 +174,7 @@ const Admins: React.FC = () => {
                                 <tr key={admin.id} className="hover:bg-app-bg/50 transition-colors">
                                     <td className="px-6 py-4 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full overflow-hidden border border-app-card">
-                                            <img src={admin.photo} alt={admin.name} className="w-full h-full object-cover" />
+                                            <img src={resolveImageUrl(admin.photo)} onError={onImageError} alt={admin.name} className="w-full h-full object-cover" />
                                         </div>
                                         <div>
                                             <div className="font-bold text-app-text">{admin.name}</div>
@@ -199,7 +201,7 @@ const Admins: React.FC = () => {
                                             <Edit3 size={18} />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(admin.id)}
+                                            onClick={() => handleDelete(admin.id)} aria-label="حذف"
                                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                                         >
                                             <Trash2 size={18} />
@@ -209,6 +211,7 @@ const Admins: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
+</div>
                 )}
             </div>
 

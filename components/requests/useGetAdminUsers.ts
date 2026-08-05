@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface AdminUser {
@@ -60,7 +60,7 @@ export const useGetAdminUsers = ({
                 params.search = search;
             }
 
-            const response = await axios.get<AdminUsersResponse>(
+            const response = await api.get<AdminUsersResponse>(
                 `${API_BASE_URL}/v1/admin/users`,
                 {
                     params,

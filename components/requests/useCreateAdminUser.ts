@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface CreateAdminUserParams {
@@ -39,7 +39,7 @@ export const useCreateAdminUser = () => {
                 formData.append('photo', data.photo);
             }
 
-            const response = await axios.post<CreateAdminUserResponse>(
+            const response = await api.post<CreateAdminUserResponse>(
                 `${API_BASE_URL}/v1/admin/users`,
                 formData,
                 {

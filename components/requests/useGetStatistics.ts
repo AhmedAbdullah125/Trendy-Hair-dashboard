@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 interface Metric {
@@ -39,7 +39,7 @@ export const useGetStatistics = () => {
         queryKey: ['admin-statistics'],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
-            const response = await axios.get<StatisticsResponse>(
+            const response = await api.get<StatisticsResponse>(
                 `${API_BASE_URL}/v1/admin/statistics`,
                 { headers: { Authorization: `Bearer ${adminToken}` } }
             );

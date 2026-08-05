@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface UpdateAdminBannerParams {
@@ -43,7 +43,11 @@ export const useUpdateAdminBanner = () => {
                 formData.append('image', data.image);
             }
 
-            const response = await axios.put<UpdateAdminBannerResponse>(
+            // PHP only parses multipart bodies on POST, so a real PUT arrives
+            // empty and fails `translations` validation. Spoof the method.
+            formData.append('_method', 'PUT');
+
+            const response = await api.post<UpdateAdminBannerResponse>(
                 `${API_BASE_URL}/v1/admin/banner/${data.id}`,
                 formData,
                 {

@@ -258,7 +258,7 @@ const AdminBanners: React.FC = () => {
                                                         <Edit3 size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(banner.id, banner.title_ar)}
+                                                        onClick={() => handleDelete(banner.id, banner.title_ar)} aria-label="حذف"
                                                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                                                     >
                                                         <Trash2 size={18} />

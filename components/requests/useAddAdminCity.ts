@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -31,7 +31,7 @@ export const useAddAdminCity = () => {
             formData.append('governorate_id', data.governorate_id.toString());
             formData.append('is_active', (data.is_active ?? 1).toString());
 
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_BASE_URL}/v1/admin/city`,
                 formData,
                 {

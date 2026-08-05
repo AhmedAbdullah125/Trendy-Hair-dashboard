@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { adminRefreshToken } from '../components/requests/adminRefreshToken';
+import { handleAdminUnauthorized } from '../lib/axiosInstance';
 
 /**
  * Hook to automatically refresh admin token before expiration
@@ -59,15 +60,11 @@ export const useAdminTokenRefresh = () => {
         };
 
         const handleRefreshFailure = () => {
-            console.error('Failed to refresh admin token - logging out');
-            // Clear invalid tokens
-            localStorage.removeItem('admin_token');
-            localStorage.removeItem('admin_refresh_token');
-            localStorage.removeItem('admin_user');
-            localStorage.removeItem('admin_permissions');
-            localStorage.removeItem('admin_last_refresh_time');
-            // Redirect to login
-            window.location.href = '/admin/login';
+            // Routed through the shared handler so the session is cleared the
+            // same way as on a 401, and so navigation uses the hash: this app
+            // runs on a HashRouter with no SPA rewrite config, where a hard
+            // navigation to the path `/admin/login` is a 404 on a static host.
+            handleAdminUnauthorized();
         };
 
         // Check on mount

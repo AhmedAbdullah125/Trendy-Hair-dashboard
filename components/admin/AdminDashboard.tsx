@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useGetStatistics } from '../requests/useGetStatistics';
 import { useGetAdminOrders } from '../requests/useGetAdminOrders';
+import { statusBadge } from '../../lib/orderStatus';
 
 /**
  * Dashboard home.
@@ -244,8 +245,8 @@ const AdminDashboard: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-app-textSec">{order.created_at}</td>
                     <td className="px-6 py-4 font-bold text-app-gold">{order.total} د.ك</td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-app-bg text-app-text border border-app-card/50">
-                        {order.status}
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusBadge(order.status).colors}`}>
+                        {statusBadge(order.status).label}
                       </span>
                     </td>
                   </tr>

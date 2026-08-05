@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export const useGetAdminGovernorates = (pageSize = 1000, pageNumber = 1, lang = 'ar') => {
@@ -7,7 +7,7 @@ export const useGetAdminGovernorates = (pageSize = 1000, pageNumber = 1, lang = 
         queryKey: ['admin-governorates', pageSize, pageNumber, lang],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
-            const response = await axios.get(
+            const response = await api.get(
                 `${API_BASE_URL}/v1/admin/governorate`,
                 {
                     params: {

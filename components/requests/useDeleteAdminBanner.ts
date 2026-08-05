@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 interface DeleteAdminBannerResponse {
@@ -19,7 +19,7 @@ export const useDeleteAdminBanner = () => {
         mutationFn: async (bannerId: number) => {
             const adminToken = localStorage.getItem('admin_token');
 
-            const response = await axios.delete<DeleteAdminBannerResponse>(
+            const response = await api.delete<DeleteAdminBannerResponse>(
                 `${API_BASE_URL}/v1/admin/banner/${bannerId}`,
                 {
                     headers: {

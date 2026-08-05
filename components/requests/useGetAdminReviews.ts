@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface Review {
@@ -49,7 +49,7 @@ export const useGetAdminReviews = ({
                 page_number: pageNumber,
             };
 
-            const response = await axios.get<ReviewsResponse>(
+            const response = await api.get<ReviewsResponse>(
                 `${API_BASE_URL}/v1/admin/review`,
                 {
                     params,

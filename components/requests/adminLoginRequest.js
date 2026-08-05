@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
+import { appendOAuthClient } from '@/lib/authConfig';
 
 export async function adminLoginRequest(data, setLoading, lang) {
     setLoading(true);
@@ -8,8 +9,7 @@ export async function adminLoginRequest(data, setLoading, lang) {
     const formData = new FormData();
     formData.append('phone', data.phone);
     formData.append('password', data.password);
-    formData.append('client_id', "a10c4102-9d0e-40ff-a301-8de8881779ac");
-    formData.append('client_secret', "SG1aNaO9BTemG8rPWHEYAxydiYQTcE1fZWBeSu5N");
+    appendOAuthClient(formData);
     formData.append('grant_type', "password");
     const headers = { 'lang': lang };
 

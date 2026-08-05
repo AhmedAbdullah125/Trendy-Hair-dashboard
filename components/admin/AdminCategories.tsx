@@ -5,6 +5,7 @@ import { useGetAdminCategories } from '../requests/useGetAdminCategories';
 import { useAddAdminCategory } from '../requests/useAddAdminCategory';
 import { useUpdateAdminCategory } from '../requests/useUpdateAdminCategory';
 import { useDeleteAdminCategory } from '../requests/useDeleteAdminCategory';
+import { PERMISSIONS, useAdminPermissions } from '../../lib/permissions';
 
 interface CategoryFormData {
   id?: number;
@@ -17,6 +18,7 @@ interface CategoryFormData {
 }
 
 const AdminCategories: React.FC = () => {
+  const { can } = useAdminPermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Partial<CategoryFormData> | null>(null);
   const [search, setSearch] = useState('');
@@ -117,12 +119,22 @@ const AdminCategories: React.FC = () => {
     }
   };
 
+  /**
+   * The catalogue is synced from Shopify, so category mutations are disabled
+   * for everyone regardless of role. The permission check is composed in here
+   * so the gating is already correct if that restriction is ever lifted.
+   */
+  const CATALOG_EDITABLE = false;
+  const canCreate = CATALOG_EDITABLE && can(PERMISSIONS.CREATE_CATEGORIES);
+  const canEdit = CATALOG_EDITABLE && can(PERMISSIONS.EDIT_CATEGORIES);
+  const canDelete = CATALOG_EDITABLE && can(PERMISSIONS.DELETE_CATEGORIES);
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-app-text">الأقسام</h2>
         <button
-          disabled
+          disabled={!canCreate}
           onClick={openAddModal}
           className="bg-app-gold text-white px-6 py-3 rounded-xl font-bold hover:bg-app-goldDark flex items-center gap-2 opacity-50 cursor-not-allowed"
         >
@@ -194,8 +206,8 @@ const AdminCategories: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 font-bold">{cat.position}</td>
                     <td className="px-6 py-4 flex gap-2">
-                      <button disabled onClick={() => openEditModal(cat)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"><Edit3 size={18} /></button>
-                      <button disabled onClick={() => handleDelete(cat.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"><Trash2 size={18} /></button>
+                      <button disabled={!canEdit} onClick={() => openEditModal(cat)} aria-label="تعديل" className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg opacity-50 cursor-not-allowed"><Edit3 size={18} /></button>
+                      <button disabled={!canDelete} onClick={() => handleDelete(cat.id)} aria-label="حذف" className="p-2 text-red-500 hover:bg-red-50 rounded-lg opacity-50 cursor-not-allowed"><Trash2 size={18} /></button>
                     </td>
                   </tr>
                 ))}

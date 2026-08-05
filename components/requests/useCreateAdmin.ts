@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { toast } from 'sonner';
 
@@ -24,7 +24,7 @@ export const useCreateAdmin = () => {
             if (data.password) formData.append('password', data.password);
             formData.append('role', data.role);
 
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_BASE_URL}/v1/admin/admins`,
                 formData,
                 {

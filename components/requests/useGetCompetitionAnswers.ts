@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axiosInstance';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 export interface CompetitionAnswer {
@@ -44,7 +44,7 @@ export const useGetCompetitionAnswers = ({
         queryKey: ['competition-answers', questionId, pageSize, pageNumber],
         queryFn: async () => {
             const adminToken = localStorage.getItem('admin_token');
-            const response = await axios.get<CompetitionAnswersResponse>(
+            const response = await api.get<CompetitionAnswersResponse>(
                 `${API_BASE_URL}/v1/admin/competition-answers`,
                 {
                     params: {
