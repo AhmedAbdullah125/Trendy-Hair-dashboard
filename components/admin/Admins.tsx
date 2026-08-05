@@ -5,7 +5,7 @@ import { useUpdateAdmin } from '../requests/useUpdateAdmin';
 import { useDeleteAdmin } from '../requests/useDeleteAdmin';
 import { useGetAdminRoles } from '../requests/useGetAdminRoles';
 import { useGetAdmin } from '../requests/useGetAdmin';
-import { Plus, Edit3, Trash2, X, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit3, Trash2, X, CheckCircle2, ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { onImageError, resolveImageUrl } from '../../lib/imageUrl';
 
 interface Admin {
@@ -21,6 +21,7 @@ interface Admin {
 }
 
 const Admins: React.FC = () => {
+    const [showPassword, setShowPassword] = useState(false);
     const pageSize = 10;
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -272,12 +273,21 @@ const Admins: React.FC = () => {
                                         <label className="block text-sm font-bold text-app-text mb-2">
                                             كلمة المرور {editingAdmin.id && '(اتركه فارغاً إذا لم ترد التغيير)'}
                                         </label>
-                                        <input
-                                            type="password"
-                                            className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
-                                            value={editingAdmin.password}
-                                            onChange={(e) => setEditingAdmin({ ...editingAdmin, password: e.target.value })}
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                className="w-full p-3 pl-10 border border-app-card rounded-xl outline-none focus:border-app-gold"
+                                                value={editingAdmin.password}
+                                                onChange={(e) => setEditingAdmin({ ...editingAdmin, password: e.target.value })}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-app-textSec hover:text-app-gold transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Edit, Trash2, Loader2, X, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Loader2, X, Upload, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useGetAdminUsers, AdminUser } from '../requests/useGetAdminUsers';
 import { useCreateAdminUser, CreateAdminUserParams } from '../requests/useCreateAdminUser';
 import { useUpdateAdminUser, UpdateAdminUserParams } from '../requests/useUpdateAdminUser';
@@ -7,6 +7,7 @@ import { useDeleteAdminUser } from '../requests/useDeleteAdminUser';
 import { toast } from 'sonner';
 
 const AdminCustomers: React.FC = () => {
+    const [showPassword, setShowPassword] = useState(false);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize] = useState(10);
     const [searchQuery, setSearchQuery] = useState('');
@@ -449,15 +450,24 @@ const AdminCustomers: React.FC = () => {
                                     كلمة المرور {!editingUser && <span className="text-red-500">*</span>}
                                     {editingUser && <span className="text-xs text-app-textSec mr-1">(اتركه فارغاً إذا كنت لا تريد التغيير)</span>}
                                 </label>
-                                <input
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full p-3 border border-app-card rounded-xl outline-none focus:border-app-gold"
-                                    placeholder="8 أحرف على الأقل"
-                                    required={!editingUser}
-                                    minLength={8}
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        className="w-full p-3 pl-10 border border-app-card rounded-xl outline-none focus:border-app-gold"
+                                        placeholder="8 أحرف على الأقل"
+                                        required={!editingUser}
+                                        minLength={8}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-app-textSec hover:text-app-gold transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Active Status */}
