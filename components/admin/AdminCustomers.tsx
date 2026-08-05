@@ -192,10 +192,16 @@ const AdminCustomers: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-fadeIn">
-            <div className="flex items-center justify-between gap-2">
+            {/*
+                Wraps on narrow screens. This was a single non-wrapping row —
+                a `whitespace-nowrap` heading, a `w-full` search box and a
+                `whitespace-nowrap` button — which cannot fit 375px, so the
+                row forced the whole page to scroll sideways.
+            */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold text-app-text whitespace-nowrap">إدارة العملاء</h2>
 
-                <div className="w-full max-w-sm">
+                <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1 sm:max-w-sm min-w-0">
                     <div className="relative">
                         <Search className="absolute left-3 top-3 text-gray-400" size={20} />
                         <input

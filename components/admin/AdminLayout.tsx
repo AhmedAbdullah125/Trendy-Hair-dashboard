@@ -54,9 +54,20 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
   return (
     <div className="flex h-screen bg-[#F7F4EE] font-alexandria overflow-hidden" dir="rtl">
       {/* Sidebar */}
+      {/*
+        `overflow-hidden` is load-bearing, not cosmetic.
+
+        Collapsed on mobile the aside is `w-0`, but its children keep their
+        intrinsic width and spilled outside that zero-width box. Since the
+        aside is `z-20` and the page header is `z-10`, the spilled close-X
+        landed directly on top of the header's hamburger — the two icons drew
+        over each other, and every tap hit the X (`setIsSidebarOpen(false)`)
+        instead of the hamburger, so a closed menu could never be reopened.
+        Clipping the overflow removes both the ghost icon and its hit area.
+      */}
       <aside
         className={`
-          bg-white shadow-xl z-20 transition-all duration-300 flex flex-col fixed md:relative h-full
+          bg-white shadow-xl z-20 transition-all duration-300 flex flex-col fixed md:relative h-full overflow-hidden
           ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 translate-x-full md:w-20 md:translate-x-0'}
         `}
       >
@@ -117,6 +128,20 @@ const AdminLayout: React.FC<{ onAdminLogout: () => void }> = ({ onAdminLogout })
           </button>
         </div>
       </aside>
+
+      {/*
+        Mobile backdrop. The sidebar is `fixed` and covers the page on small
+        screens, so without this the only way out is the small X inside it —
+        tapping the visible page did nothing. Desktop keeps the sidebar in
+        flow, so this stays hidden there.
+      */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+          className="fixed inset-0 bg-black/40 z-10 md:hidden"
+        />
+      )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">

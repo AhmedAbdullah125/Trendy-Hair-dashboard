@@ -193,7 +193,7 @@ const AdminWallets: React.FC = () => {
 
             {/* Points economy */}
             <div className="bg-white rounded-2xl shadow-sm border border-app-card/30 p-6">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex flex-wrap items-center justify-between mb-1 gap-3">
                     <h3 className="text-lg font-bold text-app-text flex items-center gap-2">
                         <Coins size={20} className="text-app-gold" />
                         قيمة النقطة

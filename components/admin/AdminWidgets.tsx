@@ -96,7 +96,7 @@ const AdminWidgets: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* <div className="flex items-center justify-between">
+      {/* <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-app-text">ودجات الرئيسية</h2>
           <p className="text-sm text-app-textSec mt-1">إدارة الأقسام والمنتجات المعروضة في الصفحة الرئيسية</p>

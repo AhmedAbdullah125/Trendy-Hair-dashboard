@@ -241,7 +241,7 @@ const AdminProducts: React.FC = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-app-text">المنتجات</h2>
 
         <button
@@ -749,7 +749,7 @@ const AdminProducts: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
 
-            <div className="flex items-center justify-between p-6 border-b border-app-card/30">
+            <div className="flex flex-wrap items-center justify-between p-6 border-b border-app-card/30 gap-3">
               <h3 className="text-xl font-bold text-app-text">تفاصيل المنتج</h3>
               <button
                 onClick={() => setViewingProduct(null)}

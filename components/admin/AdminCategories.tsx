@@ -131,7 +131,7 @@ const AdminCategories: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-app-text">الأقسام</h2>
         <button
           disabled={!canCreate}

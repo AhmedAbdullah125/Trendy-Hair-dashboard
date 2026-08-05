@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
+import { Search, X, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
 import { useGetAdminOrders, Order, OrderStatus, PaymentStatus } from '../requests/useGetAdminOrders';
 import { useChangeOrderStatus } from '../requests/useChangeOrderStatus';
 import { ORDER_STATUS_OPTIONS, statusBadge, toOrderStatusKey, type OrderStatusKey } from '../../lib/orderStatus';
@@ -190,6 +190,9 @@ const AdminOrders: React.FC = () => {
     setPageNumber(1);
   };
 
+  /** Whether anything is actually filtered right now. */
+  const hasActiveFilters = Boolean(status || paymentStatus || fromDate || toDate || searchQuery);
+
   const handleResetFilters = () => {
     setStatus('');
     setPaymentStatus('');
@@ -339,7 +342,7 @@ const AdminOrders: React.FC = () => {
   if (view === 'detail' && selectedOrder) {
     return (
       <div className="space-y-6 animate-fadeIn">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-2">
             <button
               onClick={handlePrint}
@@ -386,8 +389,8 @@ const AdminOrders: React.FC = () => {
                       style={{ backgroundImage: `url(${item.product.main_image})` }}
                     />
                     <div className="flex-1">
-                      <h4 className="font-bold text-app-text">{item.product.name}</h4>
-                      <p className="text-xs text-app-textSec">{item.product.brand.name}</p>
+                      <h4 className="font-bold text-app-text break-words">{item.product.name}</h4>
+                      <p className="text-xs text-app-textSec break-words">{item.product.brand.name}</p>
                     </div>
                     <div className="text-left">
                       <p className="font-bold text-app-text">{item.price} د.ك</p>
@@ -459,22 +462,29 @@ const AdminOrders: React.FC = () => {
             {/* Customer Info */}
             <div className="bg-white rounded-2xl shadow-sm border border-app-card/30 p-6">
               <h3 className="text-lg font-bold text-app-text mb-4">بيانات العميل</h3>
-              <div className="space-y-3">
+              {/*
+                `break-words` on every customer-supplied value. Names and
+                emails come from registration and can be a single unbroken
+                run of characters with no space to wrap at — the card then
+                stretched past the viewport and the whole page scrolled
+                sideways. Breaking mid-word keeps the value inside its card.
+              */}
+              <div className="space-y-3 min-w-0">
                 <div>
                   <label className="text-xs text-app-textSec block">الاسم</label>
-                  <p className="font-bold text-app-text">{selectedOrder.user.name}</p>
+                  <p className="font-bold text-app-text break-words">{selectedOrder.user.name}</p>
                 </div>
                 <div>
                   <label className="text-xs text-app-textSec block">رقم الهاتف</label>
-                  <p className="font-bold text-app-text" dir="ltr">{selectedOrder.user.phone}</p>
+                  <p className="font-bold text-app-text break-words" dir="ltr">{selectedOrder.user.phone}</p>
                 </div>
                 <div>
                   <label className="text-xs text-app-textSec block">البريد الإلكتروني</label>
-                  <p className="text-sm text-app-text">{selectedOrder.user.email}</p>
+                  <p className="text-sm text-app-text break-words">{selectedOrder.user.email}</p>
                 </div>
                 <div>
                   <label className="text-xs text-app-textSec block">العنوان</label>
-                  <p className="text-sm text-app-text">
+                  <p className="text-sm text-app-text break-words">
                     {selectedOrder.governorate.name}، {selectedOrder.city.name}
                   </p>
                 </div>
@@ -497,7 +507,7 @@ const AdminOrders: React.FC = () => {
               {selectedOrder.notes && (
                 <div className="mt-4">
                   <label className="text-xs text-app-textSec block mb-2">ملاحظات العميل</label>
-                  <p className="p-3 bg-app-bg border border-app-card rounded-xl text-sm">{selectedOrder.notes}</p>
+                  <p className="p-3 bg-app-bg border border-app-card rounded-xl text-sm break-words">{selectedOrder.notes}</p>
                 </div>
               )}
 
@@ -558,15 +568,26 @@ const AdminOrders: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-app-text">إدارة الطلبات</h2>
         <div className="flex gap-3">
-          <button
-            onClick={handleResetFilters}
-            className="p-2 bg-white border border-app-card rounded-xl text-app-textSec hover:text-app-gold hover:border-app-gold"
-          >
-            <Filter size={20} />
-          </button>
+          {/*
+            Was an unlabelled funnel icon that actually reset the filters —
+            the icon implied "open filters", nothing said otherwise, and it
+            was shown even with no filters applied, so clicking it appeared to
+            do nothing. Now it says what it does and only appears when there
+            is something to clear.
+          */}
+          {hasActiveFilters && (
+            <button
+              onClick={handleResetFilters}
+              title="مسح جميع الفلاتر"
+              className="px-4 py-2 bg-white border border-app-card rounded-xl text-app-textSec hover:text-app-gold hover:border-app-gold flex items-center gap-2 text-sm font-bold"
+            >
+              <X size={16} />
+              <span>مسح الفلاتر</span>
+            </button>
+          )}
           <button
             onClick={handleExportToExcel}
             disabled={isLoading || orders.length === 0}
