@@ -19,7 +19,7 @@
 export const shouldSeedPermissions = (
   seededRoleId: number | null,
   roleId: number | undefined,
-  fetched: string[] | undefined
+  fetched: readonly unknown[] | undefined
 ): boolean => {
   // Adding a new role — there is nothing saved to seed from.
   if (!roleId) return false;
@@ -30,4 +30,25 @@ export const shouldSeedPermissions = (
   if (!fetched) return false;
 
   return true;
+};
+
+/**
+ * Whether a role can be saved with the permissions currently ticked.
+ *
+ * `RoleRequest` became `permission => required|array|min:1` in August 2026, so
+ * an empty selection is now a 422 rather than a role with nothing granted.
+ * Checking here turns that into an inline message on the box the admin needs to
+ * tick, instead of a round trip ending in a toast.
+ */
+export const canSaveRole = (name: string, permissionCount: number): boolean =>
+  name.trim().length > 0 && permissionCount > 0;
+
+/** Why the role cannot be saved, or null when it can. */
+export const roleValidationError = (
+  name: string,
+  permissionCount: number
+): string | null => {
+  if (!name.trim()) return 'اسم الدور مطلوب.';
+  if (permissionCount === 0) return 'يجب اختيار صلاحية واحدة على الأقل.';
+  return null;
 };

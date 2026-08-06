@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 
 interface CreateRoleData {
     name: string;
-    permissions: string[];
+    /** Names or ids — the API accepts either, and unknown entries are dropped. */
+    permissions: (string | number)[];
 }
 
 export const useCreateAdminRole = () => {
@@ -17,7 +18,7 @@ export const useCreateAdminRole = () => {
             const formData = new FormData();
             formData.append('name', data.name);
             data.permissions.forEach((perm, index) => {
-                formData.append(`permission[${index}]`, perm);
+                formData.append(`permission[${index}]`, String(perm));
             });
 
             const response = await api.post(

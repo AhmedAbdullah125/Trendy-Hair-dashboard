@@ -89,6 +89,8 @@ export interface Order {
     payment_status: string;
     status: string;
     notes: string | null;
+    /** Why the order was cancelled. Null for every order that is not cancelled. */
+    cancellation_reason: string | null;
     total: string;
     items_count: number;
     created_at: string;

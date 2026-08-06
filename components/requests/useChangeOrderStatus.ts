@@ -16,6 +16,14 @@ export type OrderStatusType = OrderStatusKey;
 interface ChangeOrderStatusParams {
     orderId: number;
     status: OrderStatusKey;
+    /**
+     * Required by the API when `status` is `cancelled`, ignored otherwise.
+     *
+     * It is shown to the customer and is the only record of what went wrong, so
+     * the server rejects a cancellation without one. Any other status clears
+     * whatever was stored, so a reinstated order keeps no stale reason.
+     */
+    cancellationReason?: string;
 }
 
 interface ChangeOrderStatusResponse {
@@ -32,12 +40,18 @@ export const useChangeOrderStatus = () => {
     const queryClient = useQueryClient();
 
     return useMutation<ChangeOrderStatusResponse, Error, ChangeOrderStatusParams>({
-        mutationFn: async ({ orderId, status }: ChangeOrderStatusParams) => {
+        mutationFn: async ({ orderId, status, cancellationReason }: ChangeOrderStatusParams) => {
             const adminToken = localStorage.getItem('admin_token');
 
             // Create FormData
             const formData = new FormData();
             formData.append('status', status);
+
+            // Sent only when there is one: the field is `nullable` for other
+            // statuses, and posting an empty string would fail `min:3`.
+            if (cancellationReason?.trim()) {
+                formData.append('cancellation_reason', cancellationReason.trim());
+            }
 
             const response = await api.post<ChangeOrderStatusResponse>(
                 `${API_BASE_URL}/v1/admin/orders/change-status/${orderId}`,

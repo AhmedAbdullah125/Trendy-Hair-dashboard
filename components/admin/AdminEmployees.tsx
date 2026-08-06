@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGetAdminRoles } from '../requests/useGetAdminRoles';
 import { useGetAdminRolePermissions } from '../requests/useGetAdminRole';
-import { shouldSeedPermissions } from '../../lib/rolePermissions';
+import { roleValidationError, shouldSeedPermissions } from '../../lib/rolePermissions';
 import { useGetAdminPermissions } from '../requests/useGetAdminPermissions';
 import { useCreateAdminRole } from '../requests/useCreateAdminRole';
 import { useUpdateAdminRole } from '../requests/useUpdateAdminRole';
@@ -27,7 +27,18 @@ const AdminEmployees: React.FC = () => {
     const pageSize = 10;
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingRole, setEditingRole] = useState<{ id?: number, name: string, permissions: string[] } | null>(null);
+    /**
+     * `permissions` holds permission **ids**.
+     *
+     * It used to hold names, matched against the checkbox list. The API now
+     * sends `rolePermissionIds`, and the permission list is keyed by id — and
+     * since it stopped being filtered to top-level entries, nested permissions
+     * appear in it that name-matching could never have ticked. Ids are also
+     * accepted by the save endpoint, so nothing is lost.
+     */
+    const [editingRole, setEditingRole] = useState<{ id?: number, name: string, permissions: number[] } | null>(null);
+    /** Blocks a save the server would now reject, and says which field is at fault. */
+    const [roleError, setRoleError] = useState<string | null>(null);
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
@@ -60,8 +71,11 @@ const AdminEmployees: React.FC = () => {
      * actually do, which is half of what was reported.
      */
     const roleIds = roles.map((role: Role) => role.id);
-    const { permissionsByRole: editingRolePermissions, isLoading: rolePermissionsLoading } =
-        useGetAdminRolePermissions(roleIds);
+    const {
+        permissionsByRole: editingRolePermissions,
+        permissionIdsByRole,
+        isLoading: rolePermissionsLoading,
+    } = useGetAdminRolePermissions(roleIds);
 
     /**
      * Role id whose permissions have already been seeded into the open form.
@@ -76,32 +90,33 @@ const AdminEmployees: React.FC = () => {
     // them in when they do rather than leaving the boxes blank.
     useEffect(() => {
         const roleId = editingRole?.id;
-        const fetched = roleId ? editingRolePermissions[roleId] : undefined;
+        const fetched = roleId ? permissionIdsByRole[roleId] : undefined;
 
         if (!shouldSeedPermissions(seededRoleRef.current, roleId, fetched)) return;
 
         // Both are non-null here — shouldSeedPermissions returns false otherwise.
         seededRoleRef.current = roleId as number;
         setEditingRole((current) =>
-            current?.id === roleId ? { ...current, permissions: fetched as string[] } : current
+            current?.id === roleId ? { ...current, permissions: fetched as number[] } : current
         );
-    }, [editingRole?.id, editingRolePermissions]);
+    }, [editingRole?.id, permissionIdsByRole]);
 
     const handleOpenModal = (role?: Role) => {
         // Reopening re-seeds from whatever the cache now holds, so a role edited
         // earlier in the session does not show the previous session's ticks.
         seededRoleRef.current = null;
+        setRoleError(null);
 
         if (role) {
             setEditingRole({
                 id: role.id,
                 name: role.name,
-                // Filled in by the effect below once the role's own permissions
+                // Filled in by the effect above once the role's own permissions
                 // arrive. This used to be left as `[]` permanently — nothing ever
                 // fetched them — so every tick box opened blank and pressing
                 // تحديث posted an empty list, stripping the role of everything
                 // it had.
-                permissions: editingRolePermissions[role.id] ?? [],
+                permissions: permissionIdsByRole[role.id] ?? [],
             });
         } else {
             setEditingRole({ name: '', permissions: [] });
@@ -122,18 +137,31 @@ const AdminEmployees: React.FC = () => {
         }
     };
 
-    const togglePermission = (permName: string) => {
+    const togglePermission = (permId: number) => {
         if (!editingRole) return;
+
         const currentPerms = editingRole.permissions;
-        if (currentPerms.includes(permName)) {
-            setEditingRole({ ...editingRole, permissions: currentPerms.filter(p => p !== permName) });
-        } else {
-            setEditingRole({ ...editingRole, permissions: [...currentPerms, permName] });
-        }
+        const next = currentPerms.includes(permId)
+            ? currentPerms.filter(p => p !== permId)
+            : [...currentPerms, permId];
+
+        setEditingRole({ ...editingRole, permissions: next });
+        // Clear the complaint as soon as the admin acts on it.
+        if (next.length > 0) setRoleError(null);
     };
 
     const handleSave = async () => {
-        if (!editingRole || !editingRole.name) return;
+        if (!editingRole) return;
+
+        // `permission` became `required|array|min:1`, so an empty selection is
+        // now a 422 rather than a role with nothing granted. Saying so here
+        // beats a round trip that ends in a toast.
+        const validationError = roleValidationError(editingRole.name, editingRole.permissions.length);
+        if (validationError) {
+            setRoleError(validationError);
+            return;
+        }
+        setRoleError(null);
 
         if (editingRole.id) {
             await updateMutation.mutateAsync({
@@ -282,10 +310,10 @@ const AdminEmployees: React.FC = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {allPermissions.map((perm: Permission) => {
-                                            const isSelected = editingRole.permissions.includes(perm.name);
+                                            const isSelected = editingRole.permissions.includes(perm.id);
                                             return (
                                                 <div key={perm.id}
-                                                    onClick={() => togglePermission(perm.name)}
+                                                    onClick={() => togglePermission(perm.id)}
                                                     className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${isSelected ? 'bg-app-gold/10 border-app-gold' : 'border-app-card hover:bg-gray-50'}`}
                                                 >
                                                     <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isSelected ? 'bg-app-gold text-white' : 'bg-gray-200'}`}>
@@ -300,6 +328,12 @@ const AdminEmployees: React.FC = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {roleError && (
+                                <p role="alert" className="text-red-500 text-sm font-bold">
+                                    {roleError}
+                                </p>
+                            )}
                         </div>
 
                         <div className="p-6 border-t border-app-card/30 flex justify-end gap-3 bg-gray-50 rounded-b-2xl">

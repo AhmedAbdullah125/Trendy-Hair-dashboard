@@ -46,14 +46,33 @@ export const useGetAdminRolePermissions = (ids: number[]) => {
         queries: ids.map((id) => adminRoleQueryOptions(id)),
     });
 
+    /** Permission names, for display. */
     const permissionsByRole: Record<number, string[]> = {};
+    /**
+     * Permission ids, for matching the checkbox list.
+     *
+     * Names were used until `rolePermissionIds` was added. Ids are the right
+     * key: the permission list is keyed by id, and it now includes nested
+     * permissions that were previously filtered out — those could never be
+     * ticked, because the list they had to match against did not contain them.
+     */
+    const permissionIdsByRole: Record<number, number[]> = {};
+
     ids.forEach((id, index) => {
-        const names = results[index]?.data?.items?.rolePermissions;
+        const items = results[index]?.data?.items;
+
+        const names = items?.rolePermissions;
         if (Array.isArray(names)) permissionsByRole[id] = names;
+
+        const permissionIds = items?.rolePermissionIds;
+        if (Array.isArray(permissionIds)) {
+            permissionIdsByRole[id] = permissionIds.map((value: unknown) => Number(value));
+        }
     });
 
     return {
         permissionsByRole,
+        permissionIdsByRole,
         isLoading: results.some((result) => result.isLoading),
     };
 };

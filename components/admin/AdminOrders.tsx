@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, X, Eye, Printer, AlertCircle, CheckCircle2, Loader2, Download } from 'lucide-react';
 import { useGetAdminOrders, Order, OrderStatus, PaymentStatus } from '../requests/useGetAdminOrders';
 import { useChangeOrderStatus } from '../requests/useChangeOrderStatus';
 import { ORDER_STATUS_OPTIONS, statusBadge, toOrderStatusKey, type OrderStatusKey } from '../../lib/orderStatus';
+import { cancellationReasonError, requiresCancellationReason } from '../../lib/cancellationReason';
 import { useMarkOrderPaid } from '../requests/useMarkOrderPaid';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -11,6 +12,9 @@ const AdminOrders: React.FC = () => {
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatusKey>('pending');
+  /** Reason typed for a cancellation, and the complaint about it if any. */
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancellationReasonMessage, setCancellationReasonMessage] = useState<string | null>(null);
   const [showMarkPaidConfirm, setShowMarkPaidConfirm] = useState(false);
 
   // Filter and pagination state
@@ -58,23 +62,45 @@ const AdminOrders: React.FC = () => {
     // unresolved value must never reach `change-status`, which would reject
     // it, so fall back to the current selection rather than posting garbage.
     setSelectedStatus(toOrderStatusKey(order.status) ?? 'pending');
+    // Prefill so reopening a cancelled order shows why, and re-saving does not
+    // demand the reason be retyped.
+    setCancellationReason(order.cancellation_reason ?? '');
+    setCancellationReasonMessage(null);
     setView('detail');
   };
 
   const handleStatusChangeSubmit = async () => {
     if (!selectedOrder) return;
 
+    // Cancelling requires a reason. Checking here names the field, where the
+    // server's 422 would only reach the admin as a toast after a round trip.
+    const needsReason = requiresCancellationReason(selectedStatus);
+    if (needsReason) {
+      const reasonError = cancellationReasonError(cancellationReason);
+      if (reasonError) {
+        setCancellationReasonMessage(reasonError);
+        return;
+      }
+    }
+    setCancellationReasonMessage(null);
+
     try {
       await changeOrderStatusMutation.mutateAsync({
         orderId: selectedOrder.id,
         status: selectedStatus,
+        cancellationReason: needsReason ? cancellationReason : undefined,
       });
 
       // Update the local order object
       setSelectedOrder({
         ...selectedOrder,
         status: selectedStatus,
+        // Any other status clears the stored reason server-side, so mirror that
+        // rather than leaving a stale one on screen until the next refetch.
+        cancellation_reason: needsReason ? cancellationReason.trim() : null,
       });
+
+      if (!needsReason) setCancellationReason('');
 
       toast.success('تم تحديث حالة الطلب بنجاح');
     } catch (error) {
@@ -503,6 +529,49 @@ const AdminOrders: React.FC = () => {
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
+
+              {/*
+                * Required by the API whenever the status is `cancelled`. It is
+                * shown to the customer, so it is the only explanation they get
+                * for an order disappearing.
+                */}
+              {requiresCancellationReason(selectedStatus) && (
+                <div className="mt-4">
+                  <label className="text-xs text-app-textSec block mb-2">
+                    سبب الإلغاء <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={cancellationReason}
+                    onChange={(e) => {
+                      setCancellationReason(e.target.value);
+                      if (cancellationReasonMessage) setCancellationReasonMessage(null);
+                    }}
+                    maxLength={500}
+                    className={`w-full p-3 bg-app-bg border rounded-xl h-24 text-sm outline-none focus:border-app-gold ${
+                      cancellationReasonMessage ? 'border-red-500' : 'border-app-card'
+                    }`}
+                    placeholder="مثال: المنتج غير متوفر بالمخزن"
+                  />
+                  <div className="flex justify-between items-start gap-2 mt-1">
+                    {cancellationReasonMessage
+                      ? <p className="text-red-500 text-xs font-bold">{cancellationReasonMessage}</p>
+                      : <p className="text-app-textSec text-xs">يظهر هذا السبب للعميل.</p>}
+                    <span className="text-app-textSec text-[10px] shrink-0">
+                      {cancellationReason.trim().length}/500
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* An already-cancelled order shows its stored reason. */}
+              {!requiresCancellationReason(selectedStatus) && selectedOrder.cancellation_reason && (
+                <div className="mt-4">
+                  <label className="text-xs text-app-textSec block mb-2">سبب الإلغاء السابق</label>
+                  <p className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 break-words">
+                    {selectedOrder.cancellation_reason}
+                  </p>
+                </div>
+              )}
 
               {selectedOrder.notes && (
                 <div className="mt-4">

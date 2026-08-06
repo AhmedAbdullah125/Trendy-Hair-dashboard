@@ -27,6 +27,13 @@ interface Admin {
      */
     role?: string | null;
     role_id?: number | null;
+    /**
+     * The employee's effective permissions, added to the list payload in August
+     * 2026 so the table can show what someone is allowed to do without opening
+     * each role. `[]` for an admin with no role.
+     */
+    permissions?: string[];
+    permission_ids?: number[];
     status: string;
     created_at: string;
 }
@@ -193,6 +200,7 @@ const Admins: React.FC = () => {
                                 <th className="px-6 py-4">الهاتف</th>
                                 <th className="px-6 py-4">نوع الحساب</th>
                                 <th className="px-6 py-4">الدور</th>
+                                <th className="px-6 py-4">الصلاحيات</th>
                                 <th className="px-6 py-4">الحالة</th>
                                 <th className="px-6 py-4">إجراءات</th>
                             </tr>
@@ -224,6 +232,41 @@ const Admins: React.FC = () => {
                                         ) : (
                                             <span className="text-app-textSec text-xs">—</span>
                                         )}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {/*
+                                          * Comes with the list now, so this costs no extra
+                                          * request — an employee's actual permissions are
+                                          * visible without opening their role.
+                                          */}
+                                        {(() => {
+                                            const granted = admin.permissions ?? [];
+
+                                            if (granted.length === 0) {
+                                                return <span className="text-app-textSec text-xs">لا توجد صلاحيات</span>;
+                                            }
+
+                                            const shown = granted.slice(0, 2);
+                                            const rest = granted.length - shown.length;
+
+                                            return (
+                                                <div className="flex flex-wrap gap-1 max-w-xs" title={granted.join('، ')}>
+                                                    {shown.map((name) => (
+                                                        <span
+                                                            key={name}
+                                                            className="bg-app-gold/10 text-app-goldDark px-2 py-0.5 rounded text-[11px] font-bold"
+                                                        >
+                                                            {name}
+                                                        </span>
+                                                    ))}
+                                                    {rest > 0 && (
+                                                        <span className="text-[11px] text-app-textSec font-bold px-1 py-0.5">
+                                                            +{rest}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${admin.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
