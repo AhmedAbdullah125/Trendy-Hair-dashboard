@@ -6,6 +6,8 @@ import { useUpdateAdminReview, UpdateAdminReviewParams } from '../requests/useUp
 import { useDeleteAdminReview } from '../requests/useDeleteAdminReview';
 import { toast } from 'sonner';
 import { onImageError, resolveImageUrl } from '../../lib/imageUrl';
+import { getApiErrorMessage } from '../../lib/apiError';
+import { firstReviewError, validateReview, type ReviewFieldErrors } from '../../lib/reviewValidation';
 
 const AdminReviews: React.FC = () => {
   const [pageNumber, setPageNumber] = useState(1);
@@ -14,6 +16,8 @@ const AdminReviews: React.FC = () => {
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  /** Per-field messages, so the admin sees which input to fix. */
+  const [fieldErrors, setFieldErrors] = useState<ReviewFieldErrors>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,6 +50,8 @@ const AdminReviews: React.FC = () => {
     });
     setVideoPreview(null);
     setImagePreview(null);
+    // Or a reopened form would show the previous attempt's complaints.
+    setFieldErrors({});
     setEditingReview(null);
   };
 
@@ -95,14 +101,15 @@ const AdminReviews: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.title_ar || !formData.title_en) {
-      toast.error('يرجى ملء العنوان بالعربية والإنجليزية');
-      return;
-    }
+    // Checked only for emptiness before, so "123" was an acceptable Arabic
+    // title and a missing thumbnail passed straight through to a 422 the admin
+    // never saw explained. See lib/reviewValidation.
+    const validationErrors = validateReview(formData, !!editingReview);
+    setFieldErrors(validationErrors);
 
-    if (!editingReview && !formData.video) {
-      toast.error('يرجى اختيار فيديو للمراجعة');
+    const firstError = firstReviewError(validationErrors);
+    if (firstError) {
+      toast.error(firstError);
       return;
     }
 
@@ -147,7 +154,8 @@ const AdminReviews: React.FC = () => {
       handleCloseModal();
     } catch (error) {
       console.error('Error saving review:', error);
-      toast.error('حدث خطأ أثناء حفظ البيانات');
+      // Surfaces which field the API rejected, rather than a fixed string.
+      toast.error(getApiErrorMessage(error));
     }
   };
 
@@ -338,6 +346,9 @@ const AdminReviews: React.FC = () => {
                   placeholder="أدخل عنوان المراجعة بالعربية"
                   required
                 />
+                {fieldErrors.title_ar && (
+                  <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.title_ar}</p>
+                )}
               </div>
 
               {/* English Title */}
@@ -354,6 +365,9 @@ const AdminReviews: React.FC = () => {
                   required
                   dir="ltr"
                 />
+                {fieldErrors.title_en && (
+                  <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.title_en}</p>
+                )}
               </div>
 
               {/* Video Upload */}
@@ -379,11 +393,22 @@ const AdminReviews: React.FC = () => {
                     required={!editingReview}
                   />
                 </label>
+                {fieldErrors.video && (
+                  <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.video}</p>
+                )}
               </div>
 
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-bold text-app-text mb-2">صورة مصغرة (اختياري)</label>
+                {/*
+                  * Was labelled "(اختياري)", but `CreateReviewRequest` has
+                  * `'image' => 'required|image|max:10240'` — so leaving it out
+                  * always failed, and the label was the reason anyone would.
+                  * It is genuinely optional on edit, where the rule is nullable.
+                  */}
+                <label className="block text-sm font-bold text-app-text mb-2">
+                  صورة مصغرة {editingReview ? '(اختياري)' : <span className="text-red-500">*</span>}
+                </label>
                 {imagePreview && (
                   <div className="mb-3">
                     <img src={imagePreview} alt="Preview" className="w-full max-h-48 rounded-xl border border-app-card object-cover" />
@@ -401,6 +426,9 @@ const AdminReviews: React.FC = () => {
                     className="hidden"
                   />
                 </label>
+                {fieldErrors.image && (
+                  <p className="text-red-500 text-xs font-bold mt-1">{fieldErrors.image}</p>
+                )}
               </div>
 
               {/* Submit Buttons */}

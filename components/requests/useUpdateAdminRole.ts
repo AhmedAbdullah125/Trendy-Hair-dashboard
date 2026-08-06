@@ -44,6 +44,10 @@ export const useUpdateAdminRole = () => {
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+            // The per-role permissions feed both the list's chips and the edit
+            // form's tick boxes, and they are cached separately from the list —
+            // without this they would still show the pre-save set.
+            queryClient.invalidateQueries({ queryKey: ['admin-role'] });
             toast.success(data.message || 'تم تحديث الدور بنجاح');
         },
         onError: (error: any) => {

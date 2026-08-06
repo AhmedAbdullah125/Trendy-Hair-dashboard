@@ -5,6 +5,7 @@ import { useCreateAdminUser, CreateAdminUserParams } from '../requests/useCreate
 import { useUpdateAdminUser, UpdateAdminUserParams } from '../requests/useUpdateAdminUser';
 import { useDeleteAdminUser } from '../requests/useDeleteAdminUser';
 import { toast } from 'sonner';
+import { getApiErrorMessage } from '../../lib/apiError';
 
 const AdminCustomers: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -149,7 +150,10 @@ const AdminCustomers: React.FC = () => {
             handleCloseModal();
         } catch (error) {
             console.error('Error saving user:', error);
-            toast.error('حدث خطأ أثناء حفظ البيانات');
+            // The response says which field failed — a duplicate phone, an email
+            // already registered, a password too short. Reporting a fixed string
+            // hid all of it, leaving the console as the only way to find out.
+            toast.error(getApiErrorMessage(error));
         }
     };
 
@@ -160,7 +164,7 @@ const AdminCustomers: React.FC = () => {
                 toast.success('تم حذف العميل بنجاح');
             } catch (error) {
                 console.error('Error deleting user:', error);
-                toast.error('حدث خطأ أثناء حذف العميل');
+                toast.error(getApiErrorMessage(error, 'حدث خطأ أثناء حذف العميل'));
             }
         }
     };

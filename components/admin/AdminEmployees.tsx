@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGetAdminRoles } from '../requests/useGetAdminRoles';
+import { useGetAdminRolePermissions } from '../requests/useGetAdminRole';
+import { shouldSeedPermissions } from '../../lib/rolePermissions';
 import { useGetAdminPermissions } from '../requests/useGetAdminPermissions';
 import { useCreateAdminRole } from '../requests/useCreateAdminRole';
 import { useUpdateAdminRole } from '../requests/useUpdateAdminRole';
@@ -49,12 +51,57 @@ const AdminEmployees: React.FC = () => {
 
     const allPermissions = permissionsData?.items?.permissions || [];
 
+    /**
+     * Each listed role's permissions, keyed by role id.
+     *
+     * The list endpoint does not return them, so they are fetched per role and
+     * shared with the edit modal through one cache. Without this the table could
+     * only show a name and a date — there was no way to see what any role could
+     * actually do, which is half of what was reported.
+     */
+    const roleIds = roles.map((role: Role) => role.id);
+    const { permissionsByRole: editingRolePermissions, isLoading: rolePermissionsLoading } =
+        useGetAdminRolePermissions(roleIds);
+
+    /**
+     * Role id whose permissions have already been seeded into the open form.
+     *
+     * Tracked explicitly rather than inferred from the form being empty: an
+     * admin clearing every box is a legitimate edit, and an "is it empty?" test
+     * would read that as unseeded and put the permissions straight back.
+     */
+    const seededRoleRef = useRef<number | null>(null);
+
+    // The modal can open before the role's permissions have arrived, so fill
+    // them in when they do rather than leaving the boxes blank.
+    useEffect(() => {
+        const roleId = editingRole?.id;
+        const fetched = roleId ? editingRolePermissions[roleId] : undefined;
+
+        if (!shouldSeedPermissions(seededRoleRef.current, roleId, fetched)) return;
+
+        // Both are non-null here — shouldSeedPermissions returns false otherwise.
+        seededRoleRef.current = roleId as number;
+        setEditingRole((current) =>
+            current?.id === roleId ? { ...current, permissions: fetched as string[] } : current
+        );
+    }, [editingRole?.id, editingRolePermissions]);
+
     const handleOpenModal = (role?: Role) => {
+        // Reopening re-seeds from whatever the cache now holds, so a role edited
+        // earlier in the session does not show the previous session's ticks.
+        seededRoleRef.current = null;
+
         if (role) {
             setEditingRole({
                 id: role.id,
                 name: role.name,
-                permissions: []
+                // Filled in by the effect below once the role's own permissions
+                // arrive. This used to be left as `[]` permanently — nothing ever
+                // fetched them — so every tick box opened blank and pressing
+                // تحديث posted an empty list, stripping the role of everything
+                // it had.
+                permissions: editingRolePermissions[role.id] ?? [],
             });
         } else {
             setEditingRole({ name: '', permissions: [] });
@@ -129,6 +176,7 @@ const AdminEmployees: React.FC = () => {
                             <tr>
                                 <th className="px-6 py-4">ID</th>
                                 <th className="px-6 py-4">الاسم</th>
+                                <th className="px-6 py-4">الصلاحيات</th>
                                 <th className="px-6 py-4">تاريخ الإنشاء</th>
                                 <th className="px-6 py-4">إجراءات</th>
                             </tr>
@@ -138,6 +186,46 @@ const AdminEmployees: React.FC = () => {
                                 <tr key={role.id} className="hover:bg-app-bg/50 transition-colors">
                                     <td className="px-6 py-4 font-mono text-app-textSec">#{role.id}</td>
                                     <td className="px-6 py-4 font-bold text-app-text">{role.name}</td>
+                                    <td className="px-6 py-4">
+                                        {(() => {
+                                            const granted = editingRolePermissions[role.id];
+
+                                            if (!granted) {
+                                                return (
+                                                    <span className="text-xs text-app-textSec">
+                                                        {rolePermissionsLoading ? 'جاري التحميل…' : '—'}
+                                                    </span>
+                                                );
+                                            }
+
+                                            if (granted.length === 0) {
+                                                return <span className="text-xs text-app-textSec">لا توجد صلاحيات</span>;
+                                            }
+
+                                            // Capped so a role with everything ticked does not push the
+                                            // actions column off the row; the full set is in the modal.
+                                            const shown = granted.slice(0, 3);
+                                            const rest = granted.length - shown.length;
+
+                                            return (
+                                                <div className="flex flex-wrap gap-1 max-w-xs" title={granted.join('، ')}>
+                                                    {shown.map((name) => (
+                                                        <span
+                                                            key={name}
+                                                            className="bg-app-gold/10 text-app-goldDark px-2 py-0.5 rounded text-[11px] font-bold"
+                                                        >
+                                                            {name}
+                                                        </span>
+                                                    ))}
+                                                    {rest > 0 && (
+                                                        <span className="text-[11px] text-app-textSec font-bold px-1 py-0.5">
+                                                            +{rest}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </td>
                                     <td className="px-6 py-4 text-app-textSec">{new Date(role.created_at).toLocaleDateString('ar-EG')}</td>
                                     <td className="px-6 py-4 flex gap-2">
                                         <button
