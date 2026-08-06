@@ -15,7 +15,18 @@ interface Admin {
     email: string;
     phone: string;
     photo: string;
+    /**
+     * The `admins.account_type` enum (`super_admin` | `admin`). Unrelated to the
+     * assigned role below — it is a column on the table, not a permission set.
+     */
     account_type: string;
+    /**
+     * The assigned role's name, flattened onto the list by backend `5710547`.
+     * This is what the role `<select>` matches on, and what `syncRoles()` takes.
+     * Null for an admin with no role assigned.
+     */
+    role?: string | null;
+    role_id?: number | null;
     status: string;
     created_at: string;
 }
@@ -54,17 +65,27 @@ const Admins: React.FC = () => {
 
     // Effect to populate form when single admin data is fetched
     useEffect(() => {
-        if (singleAdminData?.items?.admins?.[0] && selectedAdminId) {
-            const admin = singleAdminData.items.admins[0];
-            setEditingAdmin({
-                id: admin.id,
-                name: admin.name,
-                phone: admin.phone,
-                email: admin.email,
-                role: admin.account_type,
-                password: ''
-            });
-        }
+        // `show()` answers with `items.admin` (singular) alongside `adminRoles`
+        // — a list of assigned role *ids* — and the full `roles` catalogue. The
+        // old `items.admins[0]` never existed, so this effect never ran and the
+        // modal kept whatever `handleOpenModal` had put there.
+        const admin = singleAdminData?.items?.admin;
+        if (!admin || !selectedAdminId) return;
+
+        // The `<select>` is keyed by role name, so resolve the id to its name.
+        const assignedRoleId = singleAdminData?.items?.adminRoles?.[0];
+        const assignedRole = singleAdminData?.items?.roles?.find(
+            (role: any) => role.id === assignedRoleId
+        );
+
+        setEditingAdmin({
+            id: admin.id,
+            name: admin.name,
+            phone: admin.phone,
+            email: admin.email,
+            role: assignedRole?.name ?? admin.role ?? '',
+            password: ''
+        });
     }, [singleAdminData, selectedAdminId]);
 
     const handleOpenModal = (admin?: Admin) => {
@@ -75,7 +96,12 @@ const Admins: React.FC = () => {
                 name: admin.name,
                 phone: admin.phone || '',
                 email: admin.email || '',
-                role: admin.account_type || '',
+                // `account_type` was used here, but it holds the
+                // `super_admin`/`admin` enum while these options are role
+                // names — so the select matched nothing and saving pushed
+                // "super_admin" into `syncRoles()`, which has no such role.
+                // Backend `5710547` now flattens the real role onto the list.
+                role: admin.role || '',
                 password: ''
             });
         } else {
@@ -166,6 +192,7 @@ const Admins: React.FC = () => {
                                 <th className="px-6 py-4">البريد الإلكتروني</th>
                                 <th className="px-6 py-4">الهاتف</th>
                                 <th className="px-6 py-4">نوع الحساب</th>
+                                <th className="px-6 py-4">الدور</th>
                                 <th className="px-6 py-4">الحالة</th>
                                 <th className="px-6 py-4">إجراءات</th>
                             </tr>
@@ -188,6 +215,15 @@ const Admins: React.FC = () => {
                                         <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded text-xs font-bold">
                                             {admin.account_type}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {admin.role ? (
+                                            <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs font-bold">
+                                                {admin.role}
+                                            </span>
+                                        ) : (
+                                            <span className="text-app-textSec text-xs">—</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${admin.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
