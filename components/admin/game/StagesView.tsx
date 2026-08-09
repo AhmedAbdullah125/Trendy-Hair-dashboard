@@ -8,6 +8,13 @@ import { useUpdateCompetitionStage } from '../../requests/useUpdateCompetitionSt
 import { useDeleteCompetitionStage } from '../../requests/useDeleteCompetitionStage';
 import { StatusBadge } from './StatusBadge';
 
+const formatPrize = (prize: string | number | null | undefined): string => {
+    const value = Number(prize);
+    if (!Number.isFinite(value)) return '—';
+
+    return `${new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 3 }).format(value)} نقطة`;
+};
+
 export function StagesView({ onSelectStage }: { onSelectStage: (stage: CompetitionStage) => void }) {
     const [page, setPage] = useState(1);
     const { data, isLoading } = useGetCompetitionStages({ pageNumber: page, pageSize: 10 });
@@ -64,7 +71,9 @@ export function StagesView({ onSelectStage }: { onSelectStage: (stage: Competiti
                                     <td className="px-6 py-4 font-bold">{stage.name}</td>
                                     <td className="px-6 py-4">{stage.sort_by}</td>
                                     <td className="px-6 py-4">{stage.question_time}</td>
-                                    <td className="px-6 py-4">{stage.prize}</td>
+                                    <td className="px-6 py-4 font-bold text-app-goldDark whitespace-nowrap">
+                                        {formatPrize(stage.prize)}
+                                    </td>
                                     <td className="px-6 py-4">{stage.stage_number_of_questions || 0}</td>
                                     <td className="px-6 py-4"><StatusBadge status={stage.status} /></td>
                                     <td className="px-6 py-4">
