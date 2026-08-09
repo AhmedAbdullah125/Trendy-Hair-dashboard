@@ -794,9 +794,9 @@ const AdminOrders: React.FC = () => {
         {/* Table */}
         {!isLoading && !isError && orders.length > 0 && (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right">
-                <thead className="bg-app-bg text-app-textSec text-xs font-bold uppercase">
+            <div className="max-h-[calc(100vh-18rem)] overflow-auto overscroll-contain">
+              <table className="w-full min-w-[1100px] text-right">
+                <thead className="sticky top-0 z-10 bg-app-bg text-app-textSec text-xs font-bold uppercase">
                   <tr>
                     <th className="px-6 py-4">رقم الطلب</th>
                     <th className="px-6 py-4">العميل</th>
@@ -805,15 +805,15 @@ const AdminOrders: React.FC = () => {
                     <th className="px-6 py-4">الإجمالي</th>
                     <th className="px-6 py-4">حالة التوصيل</th>
                     <th className="px-6 py-4">حالة الدفع</th>
-                    <th className="px-6 py-4">إجراءات</th>
+                    <th className="sticky left-0 z-20 bg-app-bg px-6 py-4">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-app-card/30 text-sm">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-app-bg/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-app-text">#{order.order_number}</td>
-                      <td className="px-6 py-4">
-                        <div className="font-bold">{order.user.name}</div>
+                    <tr key={order.id} className="group hover:bg-app-bg/50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-app-text whitespace-nowrap">#{order.order_number}</td>
+                      <td className="px-6 py-4 max-w-[240px]">
+                        <div className="font-bold break-words">{order.user.name}</div>
                         <div className="text-xs text-app-textSec" dir="ltr">{order.user.phone}</div>
                       </td>
                       <td className="px-6 py-4 text-app-textSec">{new Date(order.created_at).toLocaleDateString('ar-EG')}</td>
@@ -822,7 +822,7 @@ const AdminOrders: React.FC = () => {
                       <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
                       <td className="px-6 py-4"><StatusBadge status={order.payment_status} /></td>
 
-                      <td className="px-6 py-4">
+                      <td className="sticky left-0 bg-white px-6 py-4 group-hover:bg-[#FAF8F3] transition-colors">
                         <button
                           onClick={() => handleViewOrder(order)}
                           className="p-2 text-app-gold hover:bg-app-gold/10 rounded-lg transition-colors"
